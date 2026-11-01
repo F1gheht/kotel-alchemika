@@ -31,3 +31,5 @@ func main() {
 func runInstaller(path string) error {
 	return errors.New("обновление работает только в Windows")
 }
+
+func openURL(u string) { exec.Command("xdg-open", u).Start() }

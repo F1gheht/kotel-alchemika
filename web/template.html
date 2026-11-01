@@ -182,6 +182,24 @@ tr.is-have .shop-item span{text-decoration:line-through}
 .upd-notes{white-space:pre-wrap;margin-top:6px;max-height:200px;overflow:auto;font-size:13px}
 .update-btns{display:flex;gap:8px;grid-row:1;grid-column:2}
 @media (max-width:600px){.update{grid-template-columns:minmax(0,1fr)}.update-btns{grid-row:auto;grid-column:auto}}
+.icon-btn{display:inline-flex;align-items:center;gap:6px}
+dialog#settingsDlg{border:1px solid var(--line);border-radius:14px;padding:0;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 48px);background:var(--panel);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog#settingsDlg::backdrop{background:rgba(10,16,13,.55)}
+.set-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+.set-head .icon-btn{font-size:20px;line-height:1;padding:4px 10px}
+.set-body{padding:6px 18px 18px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+.set-sec{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.set-sec:first-child{border-top:0}
+.set-row{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:34px}
+.set-row select{min-width:170px}
+.set-chk{width:18px;height:18px;margin:0}
+.seg.th{grid-template-columns:repeat(3,minmax(0,1fr));min-width:270px}
+.seg.th button{font-family:var(--f-body);font-size:13px;padding:6px 8px}
+.seg.th button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.reset-box{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end}
+button.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+#ghLink{color:var(--accent)}
+@media (max-width:520px){.set-row{flex-direction:column;align-items:stretch}.seg.th{min-width:0}}
 textarea#copyArea{width:100%;height:160px;margin-top:8px;font-family:var(--f-mono);font-size:12px}
 </style>
 
@@ -192,13 +210,9 @@ textarea#copyArea{width:100%;height:160px;margin-top:8px;font-family:var(--f-mon
       <div class="sub" id="dataInfo"></div>
     </div>
     <div class="controls" id="topControls">
-      <label class="ctl" for="lang"><span data-t="lang"></span><select id="lang"><option value="ru">Русский</option><option value="en">English</option></select></label>
-      <label class="ctl" for="server"><span data-t="server"></span><select id="server"><option value="europe">Europe</option><option value="west">Americas</option><option value="east">Asia</option></select></label>
       <label class="ctl" for="priceMode"><span data-t="price"></span><select id="priceMode"><option value="avg" data-t="avg"></option><option value="now" data-t="now"></option></select></label>
-      <label class="ctl" for="auto" data-local hidden><span data-t="auto"></span><select id="auto"><option value="0" data-t="off"></option><option value="5" data-t="m5"></option><option value="10" data-t="m10"></option><option value="30" data-t="m30"></option></select></label>
       <button class="primary" id="refresh" data-t="refresh"></button>
-      <label class="ctl-chk" for="checkUpd" data-local hidden><input type="checkbox" id="checkUpd"><span data-t="checkUpd"></span></label>
-      <button id="help" data-t="tour"></button>
+      <button id="openSettings" class="icon-btn"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span data-t="settings"></span></button>
     </div>
   </header>
   <div class="status" id="status" hidden></div>
@@ -231,6 +245,37 @@ textarea#copyArea{width:100%;height:160px;margin-top:8px;font-family:var(--f-mon
   </div>
   <p class="note"><span id="note"></span> <span class="mono" id="ver"></span></p>
 </div>
+<dialog id="settingsDlg" aria-labelledby="setTitle">
+  <div class="set-head"><h2 id="setTitle" data-t="settings"></h2><button id="closeSettings" class="icon-btn" aria-label="×">×</button></div>
+  <div class="set-body">
+    <section class="set-sec">
+      <div class="group-name" data-t="setLook"></div>
+      <label class="set-row" for="lang"><span data-t="lang"></span><select id="lang"><option value="ru">Русский</option><option value="en">English</option></select></label>
+      <div class="set-row"><span data-t="theme"></span><div class="seg th" id="themeSeg"><button data-theme-set="system" data-t="themeSystem"></button><button data-theme-set="light" data-t="themeLight"></button><button data-theme-set="dark" data-t="themeDark"></button></div></div>
+    </section>
+    <section class="set-sec">
+      <div class="group-name" data-t="setPrices"></div>
+      <label class="set-row" for="server"><span data-t="server"></span><select id="server"><option value="europe">Europe</option><option value="west">Americas</option><option value="east">Asia</option></select></label>
+      <label class="set-row" for="auto" data-local hidden><span data-t="auto"></span><select id="auto"><option value="0" data-t="off"></option><option value="5" data-t="m5"></option><option value="10" data-t="m10"></option><option value="30" data-t="m30"></option></select></label>
+    </section>
+    <section class="set-sec" data-local hidden>
+      <div class="group-name" data-t="setApp"></div>
+      <label class="set-row" for="checkUpd"><span data-t="checkUpd"></span><input type="checkbox" id="checkUpd" class="set-chk"></label>
+      <div class="set-row"><span data-t="updNow"></span><span><button id="checkNow" data-t="checkNowBtn"></button></span></div>
+      <div class="sub" id="updState"></div>
+    </section>
+    <section class="set-sec">
+      <div class="group-name" data-t="setHelp"></div>
+      <div class="set-row"><span data-t="tourAgain"></span><button id="help" data-t="tour"></button></div>
+      <div class="set-row"><span data-t="resetAll"></span><span class="reset-box"><button id="resetAsk" data-t="resetBtn"></button><span id="resetConfirm" hidden><span class="sub" data-t="resetSure"></span> <button id="resetYes" class="danger" data-t="resetYes"></button> <button id="resetNo" data-t="resetNo"></button></span></span></div>
+    </section>
+    <section class="set-sec">
+      <div class="group-name" data-t="setAbout"></div>
+      <div class="set-row"><span><span data-t="title"></span> <span class="mono" id="aboutVer"></span></span><a id="ghLink" href="https://github.com/F1gheht/kotel-alchemika" target="_blank" rel="noopener">GitHub</a></div>
+      <p class="sub" style="margin:0" data-t="aboutText"></p>
+    </section>
+  </div>
+</dialog>
 <div id="tour" hidden>
   <div class="tour-spot" id="tourSpot"></div>
   <div class="tour-card" id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
@@ -243,7 +288,7 @@ textarea#copyArea{width:100%;height:160px;margin-top:8px;font-family:var(--f-mon
 
 <script>
 const DATA = /*__DATA__*/null;
-const APP_VERSION = "2.6.0";
+const APP_VERSION = "2.7.0";
 const CITIES = ["Brecilien","Bridgewatch","Martlock","Thetford","Fort Sterling","Lymhurst","Caerleon"];
 const FAMILY_ORDER = ["HEAL","ENERGY","REVIVE","STONESKIN","SLOWFIELD","COOLDOWN","CLEANSE","MOB_RESET","CLEANSE2","ACID","BERSERK","LAVA","GATHER","TORNADO","LIFEWARD"];
 const FAM = {
@@ -260,7 +305,7 @@ const RFAM = [
 ];
 const I18N = {
  ru:{title:"Котёл алхимика",lang:"Язык",server:"Сервер",price:"Цена",avg:"Средняя за 7 дней",now:"Текущая на рынке",auto:"Автообновление",off:"Выключено",m5:"Каждые 5 мин",m10:"Каждые 10 мин",m30:"Каждые 30 мин",refresh:"Обновить цены",
-   tabPotions:"Зелья",tabRefine:"Перекрафт",checkUpd:"Проверять обновления",updAvail:"Доступна версия ",updYours:"у тебя ",updNotes:"Что нового",updGo:"Обновить",updLater:"Позже",updLoading:"Скачиваю обновление…",updRestart:"Устанавливаю обновление — приложение откроется заново через несколько секунд.",updFail:"Не получилось обновить: ",gCraft:"Крафт",retMode:"Сырьё",retWith:"С возвратом",retPlain:"Без возврата",retWithHint:"купить меньше: вернувшееся идёт в следующие крафты",retPlainHint:"купить на всё количество, возврат останется тебе",backValue:"Вернётся сырья на",backHint:"по рыночной цене, учтено в профите",planQty:"Нужно",toSell:"Продать, шт.",spent:"Сырьё и станок",chainShort:"цепочка от T2",daily:"Бонус дня",dailyNone:"Нет",dailyHintPotion:"если сегодня бонус на зелья",dailyHintRefine:"если сегодня бонус на этот материал",notIsland:"не на острове",gFees:"Налоги и станок",premium:"Премиум",salesTax:"налог с продажи",stationFee:"Станок за 1 крафт",stationHint:"серебро, как в окне крафта; свой остров — 0",stationTotal:"Станок",toBuy:"Докупить на",haveWorth:"уже есть на",afterTax:"после налога",profitHaveNote:"То, что уже есть, считается по рыночной цене: его можно было бы продать.",have:"Есть",clearHave:"Снять все «Есть»",tour:"Обучение",tourNext:"Далее",tourBack:"Назад",tourSkip:"Пропустить",tourDone:"Готово",version:"Версия",
+   tabPotions:"Зелья",tabRefine:"Перекрафт",settings:"Настройки",setLook:"Внешний вид",theme:"Тема",themeSystem:"Как в системе",themeLight:"Светлая",themeDark:"Тёмная",setPrices:"Цены",setApp:"Приложение",updNow:"Обновления",checkNowBtn:"Проверить сейчас",updChecking:"Проверяю…",updLatest:"У тебя последняя версия",updFound:"Есть новая версия ",updErr:"Не получилось проверить: ",setHelp:"Помощь и данные",tourAgain:"Обучение по интерфейсу",resetAll:"Сбросить все данные",resetBtn:"Сбросить…",resetSure:"Удалить планы, ручные цены и настройки?",resetYes:"Да, сбросить",resetNo:"Отмена",setAbout:"О программе",aboutText:"Калькулятор крафта зелий и перекрафта ресурсов Albion Online. Цены — Albion Online Data Project, рецепты и иконки — из игровых файлов. Неофициальный фанатский проект.",checkUpd:"Проверять обновления",updAvail:"Доступна версия ",updYours:"у тебя ",updNotes:"Что нового",updGo:"Обновить",updLater:"Позже",updLoading:"Скачиваю обновление…",updRestart:"Устанавливаю обновление — приложение откроется заново через несколько секунд.",updFail:"Не получилось обновить: ",gCraft:"Крафт",retMode:"Сырьё",retWith:"С возвратом",retPlain:"Без возврата",retWithHint:"купить меньше: вернувшееся идёт в следующие крафты",retPlainHint:"купить на всё количество, возврат останется тебе",backValue:"Вернётся сырья на",backHint:"по рыночной цене, учтено в профите",planQty:"Нужно",toSell:"Продать, шт.",spent:"Сырьё и станок",chainShort:"цепочка от T2",daily:"Бонус дня",dailyNone:"Нет",dailyHintPotion:"если сегодня бонус на зелья",dailyHintRefine:"если сегодня бонус на этот материал",notIsland:"не на острове",gFees:"Налоги и станок",premium:"Премиум",salesTax:"налог с продажи",stationFee:"Станок за 1 крафт",stationHint:"серебро, как в окне крафта; свой остров — 0",stationTotal:"Станок",toBuy:"Докупить на",haveWorth:"уже есть на",afterTax:"после налога",profitHaveNote:"То, что уже есть, считается по рыночной цене: его можно было бы продать.",have:"Есть",clearHave:"Снять все «Есть»",tour:"Обучение",tourNext:"Далее",tourBack:"Назад",tourSkip:"Пропустить",tourDone:"Готово",version:"Версия",
    plan:"План крафта",clear:"Очистить",shop:"Список закупки",copy:"Копировать",copied:"Скопировано",search:"Найти зелье…",nothing:"Ничего не найдено",
    material:"Материал",tierL:"Тир",enchL:"Зачарование",profileShort:"бонус",
    perCraft:"шт. за крафт",add:"Добавить в план",qtyPotion:"Сколько зелий нужно",qtyRefine:"Сколько произвести",buyWhere:"Где покупать сырьё",cheapestCity:"В самом дешёвом городе",allIn:"Всё в: ",
@@ -279,7 +324,7 @@ const I18N = {
    cancelled:"Загрузка цен отменена.",browserFail:"Браузер не открыл сайт с ценами: ",genericFail:"Не удалось загрузить цены. Попробуй ещё раз чуть позже.",badFormat:"Сайт с ценами ответил в неожиданном формате. Показан снимок цен.",
    note:"Цены: Albion Online Data Project (собираются игроками, могут отставать на часы). Иконки: render.albiononline.com. Рецепты и названия: игровые файлы (ao-bin-dumps). Возврат ресурсов применяется ко всем ингредиентам, кроме редких алхимических (рога, когти, корни и т.п.) — они не возвращаются; количество к покупке рассчитано с запасом: возврат округляется вниз и крафтится заново в несколько заходов. Налог с продажи: 4% с премиумом или 8% без него, плюс 2,5% за выставление ордера. Налог станка — то, что указано за 1 крафт; при цепочке перекрафта он считается только для последнего тира. Фокус указан без учёта специализации: с прокачкой он меньше."},
  en:{title:"Alchemist's Cauldron",lang:"Language",server:"Server",price:"Price",avg:"7-day average",now:"Current market",auto:"Auto-refresh",off:"Off",m5:"Every 5 min",m10:"Every 10 min",m30:"Every 30 min",refresh:"Refresh prices",
-   tabPotions:"Potions",tabRefine:"Refining",checkUpd:"Check for updates",updAvail:"Version available: ",updYours:"you have ",updNotes:"What's new",updGo:"Update",updLater:"Later",updLoading:"Downloading the update…",updRestart:"Installing the update — the app will reopen in a few seconds.",updFail:"Could not update: ",gCraft:"Craft",retMode:"Materials",retWith:"With return",retPlain:"No return",retWithHint:"buy less: returns go into the next crafts",retPlainHint:"buy for the full amount, returns stay with you",backValue:"Returned materials",backHint:"at market price, counted in profit",planQty:"Wanted",toSell:"Sell, pcs",spent:"Materials and station",chainShort:"chain from T2",daily:"Daily bonus",dailyNone:"None",dailyHintPotion:"if potions have today's bonus",dailyHintRefine:"if this material has today's bonus",notIsland:"not on an island",gFees:"Taxes and station",premium:"Premium",salesTax:"sales tax",stationFee:"Station fee per craft",stationHint:"silver, as in the craft window; own island — 0",stationTotal:"Station",toBuy:"Still to buy",haveWorth:"already have",afterTax:"after tax",profitHaveNote:"Items you already have count at market price: you could sell them instead.",have:"Have",clearHave:"Clear all “Have”",tour:"Tour",tourNext:"Next",tourBack:"Back",tourSkip:"Skip",tourDone:"Done",version:"Version",
+   tabPotions:"Potions",tabRefine:"Refining",settings:"Settings",setLook:"Appearance",theme:"Theme",themeSystem:"System",themeLight:"Light",themeDark:"Dark",setPrices:"Prices",setApp:"App",updNow:"Updates",checkNowBtn:"Check now",updChecking:"Checking…",updLatest:"You have the latest version",updFound:"New version available: ",updErr:"Could not check: ",setHelp:"Help and data",tourAgain:"Interface tour",resetAll:"Reset all data",resetBtn:"Reset…",resetSure:"Delete plans, manual prices and settings?",resetYes:"Yes, reset",resetNo:"Cancel",setAbout:"About",aboutText:"Potion crafting and resource refining calculator for Albion Online. Prices from Albion Online Data Project, recipes and icons from the game files. Unofficial fan project.",checkUpd:"Check for updates",updAvail:"Version available: ",updYours:"you have ",updNotes:"What's new",updGo:"Update",updLater:"Later",updLoading:"Downloading the update…",updRestart:"Installing the update — the app will reopen in a few seconds.",updFail:"Could not update: ",gCraft:"Craft",retMode:"Materials",retWith:"With return",retPlain:"No return",retWithHint:"buy less: returns go into the next crafts",retPlainHint:"buy for the full amount, returns stay with you",backValue:"Returned materials",backHint:"at market price, counted in profit",planQty:"Wanted",toSell:"Sell, pcs",spent:"Materials and station",chainShort:"chain from T2",daily:"Daily bonus",dailyNone:"None",dailyHintPotion:"if potions have today's bonus",dailyHintRefine:"if this material has today's bonus",notIsland:"not on an island",gFees:"Taxes and station",premium:"Premium",salesTax:"sales tax",stationFee:"Station fee per craft",stationHint:"silver, as in the craft window; own island — 0",stationTotal:"Station",toBuy:"Still to buy",haveWorth:"already have",afterTax:"after tax",profitHaveNote:"Items you already have count at market price: you could sell them instead.",have:"Have",clearHave:"Clear all “Have”",tour:"Tour",tourNext:"Next",tourBack:"Back",tourSkip:"Skip",tourDone:"Done",version:"Version",
    plan:"Craft plan",clear:"Clear",shop:"Shopping list",copy:"Copy",copied:"Copied",search:"Find a potion…",nothing:"Nothing found",
    material:"Material",tierL:"Tier",enchL:"Enchantment",profileShort:"bonus",
    perCraft:"per craft",add:"Add to plan",qtyPotion:"Potions needed",qtyRefine:"Amount to make",buyWhere:"Where to buy materials",cheapestCity:"Cheapest city",allIn:"All in: ",
@@ -299,7 +344,7 @@ const I18N = {
    note:"Prices: Albion Online Data Project (crowd-sourced, can lag by hours). Icons: render.albiononline.com. Recipes and names: game files (ao-bin-dumps). Resource return applies to all ingredients except rare alchemy ones (horns, claws, roots and so on), which are never returned; amounts to buy include a margin: returns are rounded down and crafted again over several rounds. Sales tax: 4% with premium or 8% without, plus 2.5% to place a sell order. Station fee is what you enter per craft; in a refining chain it applies to the final tier only. Focus is shown without specialization; leveling lowers it."}
 };
 
-const DEFAULTS = { lang:"ru", tab:"potion", tourDone:false, checkUpdates:true, premium:true, station:{}, have:{}, server:"europe", priceMode:"avg", auto:10, buyMode:"auto", over:{}, cityPick:{},
+const DEFAULTS = { lang:"ru", theme:"system", tab:"potion", tourDone:false, checkUpdates:true, premium:true, station:{}, have:{}, server:"europe", priceMode:"avg", auto:10, buyMode:"auto", over:{}, cityPick:{},
   potion:{ sel:"T8_POTION_LAVA", ench:0, qty:120, sellCity:"Brecilien", cityBonus:true, focus:false },
   refine:{ fam:"LEATHER", tier:5, ench:0, qty:500, sellCity:"Martlock", cityBonus:true, focus:false, chain:false },
   plans:{ potion:[{id:"T8_POTION_LAVA",qty:120,sellCity:"Brecilien"},{id:"T5_POTION_MOB_RESET",qty:150,sellCity:"Brecilien"},{id:"T7_POTION_REVIVE",qty:100,sellCity:"Martlock"},{id:"T6_POTION_LAVA",qty:100,sellCity:"Brecilien"},{id:"T5_POTION_CLEANSE2",qty:50,sellCity:"Brecilien"}], refine:[] } };
@@ -420,6 +465,8 @@ function applyStatic(){
   document.querySelectorAll("[data-t]").forEach(el=>el.textContent=T(el.dataset.t));
   $("#note").textContent = T("note"); $("#ver").textContent = T("version")+" "+APP_VERSION;
   $("#checkUpd").checked=st.checkUpdates!==false;
+  applyTheme(); $("#aboutVer").textContent=APP_VERSION;
+  document.querySelectorAll("[data-theme-set]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.themeSet===(st.theme||"system"))));
   $("#lang").value=st.lang; $("#server").value=st.server; $("#priceMode").value=st.priceMode; $("#auto").value=String(st.auto);
   document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===st.tab)));
   if(LOCAL) document.querySelectorAll("[data-local]").forEach(el=>el.hidden=false);
@@ -709,7 +756,7 @@ const TOUR = [
   {sel:"#shopPanel", tab:"potion", ru:["Список закупки","Всё из плана, разложенное по городам. Переключатель «Есть» — у тебя это уже есть (например, вырастил на острове): строка не попадёт в сумму «Докупить» и в скопированный список."], en:["Shopping list","Everything in the plan, split by city. The “Have” switch means you already own it (say, grown on your island): it leaves the “Still to buy” total and the copied list."]},
   {sel:"#picker", tab:"refine", ru:["Перекрафт","Выбери материал, тир и зачарование. У каждого материала свой профильный город — он указан под названием."], en:["Refining","Choose the material, tier and enchantment. Each material has its own bonus city, shown under its name."]},
   {sel:"#setup", tab:"refine", ru:["Цепочка","«Предыдущий тир делать самому» — посчитать всю цепочку от T2, а не покупать кожу или слитки тиром ниже."], en:["Chain","“Make the previous tier myself” calculates the whole chain from T2 instead of buying the lower-tier refined item."]},
-  {sel:"#topControls", tab:null, ru:["Цены и настройки","Цены берутся с Albion Online Data Project и обновляются сами. Можно считать по средней за 7 дней или по текущей. Кнопка «Обучение» покажет эту подсказку снова."], en:["Prices and settings","Prices come from Albion Online Data Project and refresh on their own. Use the 7-day average or the current price. The “Tour” button shows this guide again."]}
+  {sel:"#topControls", tab:null, ru:["Цены и настройки","Цены берутся с Albion Online Data Project и обновляются сами. Можно считать по средней за 7 дней или по текущей. В «Настройках» — язык, тема, сервер, автообновление и повтор этого обучения."], en:["Prices and settings","Prices come from Albion Online Data Project and refresh on their own. Use the 7-day average or the current price. “Settings” has the language, theme, server, auto-refresh and this tour again."]}
 ];
 let tourI=-1, tourTabBefore="potion";
 function tourPlace(){
@@ -743,7 +790,7 @@ function tourEnd(){
   if(st.tab!==tourTabBefore){ st.tab=tourTabBefore; applyStatic(); renderPicker(); renderMain(); renderPlan(); }
   save(); $("#help").focus();
 }
-$("#help").addEventListener("click", tourStart);
+$("#help").addEventListener("click", ()=>{ $("#settingsDlg").close(); tourStart(); });
 $("#tourSkip").addEventListener("click", tourEnd);
 $("#tourBack").addEventListener("click", ()=>{ if(tourI>0) tourGo(tourI-1); });
 $("#tourNext").addEventListener("click", ()=>{ if(tourI<TOUR.length-1) tourGo(tourI+1); else tourEnd(); });
@@ -776,6 +823,38 @@ $("#updGo").addEventListener("click", async ()=>{
   }catch(e){ setStatus(T("updFail")+e.message, true); go.disabled=false; $("#updLater").disabled=false; }
 });
 $("#checkUpd").addEventListener("change", e=>{ st.checkUpdates=e.target.checked; save(); if(st.checkUpdates) checkForUpdate(); else renderUpdate(); });
+
+/* ---------- settings ---------- */
+const hostTheme = document.documentElement.getAttribute("data-theme"); // set by the viewer in the web version
+function applyTheme(){
+  const el=document.documentElement, th=st.theme||"system";
+  if(th==="light"||th==="dark") el.setAttribute("data-theme", th);
+  else if(hostTheme && !LOCAL) el.setAttribute("data-theme", hostTheme);
+  else el.removeAttribute("data-theme");
+}
+$("#openSettings").addEventListener("click", ()=>{ $("#resetConfirm").hidden=true; $("#resetAsk").hidden=false; $("#settingsDlg").showModal(); });
+$("#closeSettings").addEventListener("click", ()=>$("#settingsDlg").close());
+$("#settingsDlg").addEventListener("click", e=>{ if(e.target.id==="settingsDlg") $("#settingsDlg").close(); });
+$("#themeSeg").addEventListener("click", e=>{ const b=e.target.closest("[data-theme-set]"); if(!b) return; st.theme=b.dataset.themeSet; save(); applyStatic(); });
+$("#checkNow").addEventListener("click", async ()=>{
+  const s=$("#updState"); s.textContent=T("updChecking");
+  try{ const r=await fetch("/api/update/check?fresh=1"); const j=await r.json(); if(!r.ok) throw new Error(j.error||r.status);
+    updInfo=j; updHidden=false; renderUpdate(); s.textContent = j.newer ? T("updFound")+j.latest : T("updLatest")+" ("+j.current+")";
+  }catch(e){ s.textContent=T("updErr")+e.message; }
+});
+$("#resetAsk").addEventListener("click", ()=>{ $("#resetAsk").hidden=true; $("#resetConfirm").hidden=false; });
+$("#resetNo").addEventListener("click", ()=>{ $("#resetConfirm").hidden=true; $("#resetAsk").hidden=false; });
+$("#resetYes").addEventListener("click", async ()=>{
+  const keep={lang:st.lang, theme:st.theme, tourDone:true};
+  try{ localStorage.removeItem("kotel_state"); }catch(e){}
+  for(const k of Object.keys(st)) delete st[k];
+  Object.assign(st, structuredClone(DEFAULTS), keep);
+  st.plans={potion:[],refine:[]};
+  ls.set("kotel_state", st);
+  if(LOCAL){ try{ await fetch("/api/state",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(st)}); }catch(e){} }
+  $("#settingsDlg").close(); renderAll();
+});
+$("#ghLink").addEventListener("click", e=>{ if(LOCAL){ e.preventDefault(); fetch("/api/open-github",{method:"POST"}).catch(()=>{}); } });
 
 async function boot(){
   loadState(ls.get("kotel_state"));

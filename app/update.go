@@ -59,9 +59,9 @@ func newerThan(a, b string) bool {
 	return false
 }
 
-func checkUpdate() (*updateInfo, error) {
+func checkUpdate(fresh bool) (*updateInfo, error) {
 	updMu.Lock()
-	if updCache != nil && time.Since(updCacheAt) < 30*time.Minute {
+	if !fresh && updCache != nil && time.Since(updCacheAt) < 30*time.Minute {
 		c := *updCache
 		updMu.Unlock()
 		return &c, nil
@@ -161,13 +161,21 @@ func downloadUpdate(info *updateInfo) (string, error) {
 func registerUpdateRoutes(mux *http.ServeMux, onQuit func()) {
 	mux.HandleFunc("/api/update/check", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		info, err := checkUpdate()
+		info, err := checkUpdate(r.URL.Query().Get("fresh") != "")
 		if err != nil {
 			w.WriteHeader(502)
 			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 		json.NewEncoder(w).Encode(info)
+	})
+	mux.HandleFunc("/api/open-github", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(405)
+			return
+		}
+		openURL("https://github.com/F1gheht/kotel-alchemika")
+		w.WriteHeader(204)
 	})
 	mux.HandleFunc("/api/update/install", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -189,7 +197,7 @@ func registerUpdateRoutes(mux *http.ServeMux, onQuit func()) {
 		updMu.Unlock()
 		defer func() { updMu.Lock(); updBusy = false; updMu.Unlock() }()
 
-		info, err := checkUpdate()
+		info, err := checkUpdate(true)
 		if err != nil {
 			fail(502, err.Error())
 			return

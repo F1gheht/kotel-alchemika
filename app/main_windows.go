@@ -221,3 +221,6 @@ func runInstaller(path string) error {
 	cmd := exec.Command(path, "--silent", "--launch")
 	return cmd.Start()
 }
+
+// openURL opens a web page in the default browser.
+func openURL(u string) { exec.Command("rundll32", "url.dll,FileProtocolHandler", u).Start() }
