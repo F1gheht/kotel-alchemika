@@ -115,7 +115,9 @@ func main() {
 	}
 	quit := func() {
 		if w != nil {
-			w.Terminate()
+			// Terminate must run on the window's own thread, otherwise the window ignores it.
+			w.Dispatch(func() { w.Terminate() })
+			go func() { time.Sleep(4 * time.Second); os.Exit(0) }()
 			return
 		}
 		os.Exit(0)

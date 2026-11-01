@@ -118,6 +118,28 @@ func checkUpdate(fresh bool) (*updateInfo, error) {
 	return &c, nil
 }
 
+// progress of the running update, read by the page every few hundred milliseconds
+type updProgress struct {
+	State string `json:"state"` // idle | downloading | installing | error
+	Done  int64  `json:"done"`
+	Total int64  `json:"total"`
+	Error string `json:"error,omitempty"`
+}
+
+var updProg = updProgress{State: "idle"}
+
+func setProg(f func(p *updProgress)) { updMu.Lock(); f(&updProg); updMu.Unlock() }
+
+type countingWriter struct {
+	w io.Writer
+}
+
+func (c countingWriter) Write(b []byte) (int, error) {
+	n, err := c.w.Write(b)
+	setProg(func(p *updProgress) { p.Done += int64(n) })
+	return n, err
+}
+
 // downloadUpdate saves the release installer to the temp folder and checks it looks like a Windows program.
 func downloadUpdate(info *updateInfo) (string, error) {
 	client := &http.Client{Timeout: 5 * time.Minute}
@@ -136,7 +158,12 @@ func downloadUpdate(info *updateInfo) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	n, err := io.Copy(f, io.LimitReader(resp.Body, 200<<20))
+	total := info.size
+	if total <= 0 {
+		total = resp.ContentLength
+	}
+	setProg(func(p *updProgress) { p.Total = total; p.Done = 0 })
+	n, err := io.Copy(countingWriter{f}, io.LimitReader(resp.Body, 200<<20))
 	f.Close()
 	if err != nil {
 		os.Remove(path)
@@ -177,45 +204,60 @@ func registerUpdateRoutes(mux *http.ServeMux, onQuit func()) {
 		openURL("https://github.com/F1gheht/kotel-alchemika")
 		w.WriteHeader(204)
 	})
+	mux.HandleFunc("/api/update/progress", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		updMu.Lock()
+		p := updProg
+		updMu.Unlock()
+		json.NewEncoder(w).Encode(p)
+	})
+	// Starts the update and returns at once; the page follows it through /api/update/progress.
 	mux.HandleFunc("/api/update/install", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		fail := func(code int, msg string) {
-			w.WriteHeader(code)
-			json.NewEncoder(w).Encode(map[string]string{"error": msg})
-		}
 		if r.Method != http.MethodPost {
-			fail(405, "method")
+			w.WriteHeader(405)
 			return
 		}
 		updMu.Lock()
 		if updBusy {
 			updMu.Unlock()
-			fail(409, "обновление уже идёт")
+			w.WriteHeader(409)
+			json.NewEncoder(w).Encode(map[string]string{"error": "обновление уже идёт"})
 			return
 		}
 		updBusy = true
+		updProg = updProgress{State: "downloading"}
 		updMu.Unlock()
-		defer func() { updMu.Lock(); updBusy = false; updMu.Unlock() }()
-
-		info, err := checkUpdate(true)
-		if err != nil {
-			fail(502, err.Error())
-			return
-		}
-		if !info.Newer {
-			fail(409, "новой версии нет")
-			return
-		}
-		path, err := downloadUpdate(info)
-		if err != nil {
-			fail(502, err.Error())
-			return
-		}
-		if err := runInstaller(path); err != nil {
-			fail(500, err.Error())
-			return
-		}
+		go func() {
+			fail := func(msg string) {
+				updMu.Lock()
+				updBusy = false
+				updProg = updProgress{State: "error", Error: msg}
+				updMu.Unlock()
+			}
+			info, err := checkUpdate(true)
+			if err != nil {
+				fail(err.Error())
+				return
+			}
+			if !info.Newer {
+				fail("новой версии нет")
+				return
+			}
+			path, err := downloadUpdate(info)
+			if err != nil {
+				fail(err.Error())
+				return
+			}
+			setProg(func(p *updProgress) { p.State = "installing" })
+			if err := runInstaller(path); err != nil {
+				fail(err.Error())
+				return
+			}
+			time.Sleep(1200 * time.Millisecond) // let the page show "installing"
+			onQuit()
+		}()
+		w.WriteHeader(202)
 		json.NewEncoder(w).Encode(map[string]string{"ok": "1"})
-		go func() { time.Sleep(400 * time.Millisecond); onQuit() }()
 	})
 }
