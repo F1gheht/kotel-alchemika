@@ -1,0 +1,740 @@
+<title>Котёл алхимика</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: crafter's workbench. Tabs (potions / refining) on top. Row 1: item picker | recipe sheet. Row 2: craft plan | shopping list, one cell per city. */
+:root{
+  --bg:#eef1ec; --panel:#f8faf6; --ink:#1d2a24; --muted:#5d6b63; --line:#d3dbd3;
+  --accent:#8a4b1f; --accent-ink:#ffffff; --accent-soft:#f1e2d4;
+  --good:#23704a; --good-soft:#dcefe3; --bad:#a23a2c; --bad-soft:#f6e0dc; --warn:#8a6a12;
+  --chip:#e3e9e2; --cell:#f1f4ef;
+  --f-display:"Alegreya SC",Georgia,"Times New Roman",serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --t2:#8b8f86; --t3:#5c9a5a; --t4:#4d79c7; --t5:#c0473a; --t6:#d48a2e; --t7:#c9ad2b; --t8:#9aa3a8;
+  --e1:#3f9a5a; --e2:#3f73c4; --e3:#8a52c4; --e4:#c9a227;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141b18; --panel:#1b2420; --ink:#e4ebe5; --muted:#9aa89f; --line:#2e3a34;
+  --accent:#e0965c; --accent-ink:#1b120a; --accent-soft:#3a2a1d;
+  --good:#6fd39b; --good-soft:#1d3427; --bad:#f08a7a; --bad-soft:#3a201c; --warn:#e2c15a;
+  --chip:#26312c; --cell:#202a26; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141b18; --panel:#1b2420; --ink:#e4ebe5; --muted:#9aa89f; --line:#2e3a34;
+  --accent:#e0965c; --accent-ink:#1b120a; --accent-soft:#3a2a1d;
+  --good:#6fd39b; --good-soft:#1d3427; --bad:#f08a7a; --bad-soft:#3a201c; --warn:#e2c15a;
+  --chip:#26312c; --cell:#202a26; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.wrap{max-width:1360px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px;display:flex;flex-direction:column;gap:14px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 24px;justify-content:space-between}
+h1{font-family:var(--f-display);font-weight:700;font-size:30px;margin:0;letter-spacing:.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:700;font-size:20px;margin:0;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:500;font-size:16px;margin:0}
+.sub{color:var(--muted);font-size:13px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.ctl select{min-width:130px}
+.ctl{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted);min-width:0}
+select,input[type=number],input[type=search]{font:inherit;font-size:14px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0;max-width:100%}
+input[type=number]{font-family:var(--f-mono);width:100%}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tab{border:1px solid transparent;border-bottom:0;border-radius:8px 8px 0 0;background:transparent;padding:9px 18px;font-family:var(--f-display);font-size:17px;color:var(--muted);margin-bottom:-1px}
+.tab[aria-selected="true"]{background:var(--panel);border-color:var(--line);color:var(--ink)}
+.row1{display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px;align-items:start}
+.row2{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.row2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.row1{grid-template-columns:minmax(0,1fr)}}
+.status{font-size:13px;padding:8px 12px;border-radius:8px;background:var(--cell)}
+.status.err{color:var(--bad);background:var(--bad-soft)}
+/* picker */
+.shelf{display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 120px);overflow:auto;position:sticky;top:12px}
+@media (max-width:760px){.shelf{max-height:380px;position:static}}
+.fam-name{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:4px 2px}
+.fam-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pot{display:flex;align-items:center;justify-content:center;gap:4px;padding:3px;border-radius:8px;border:1px solid transparent;background:var(--chip);color:var(--ink)}
+.pot img,.ico{width:34px;height:34px}
+.pot[aria-pressed="true"],.rfam[aria-pressed="true"],.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.rfam{display:grid;grid-template-columns:40px minmax(0,1fr);gap:8px;align-items:center;text-align:left;padding:6px 8px;border-radius:8px;border:1px solid transparent;background:var(--chip);color:var(--ink);width:100%}
+.rfam img{width:40px;height:40px}
+.rfam .alt{display:block}
+.seg{display:grid;gap:4px}
+.seg.t{grid-template-columns:repeat(7,minmax(0,1fr))}
+.seg.e{grid-template-columns:repeat(5,minmax(0,1fr))}
+.seg.p{grid-template-columns:repeat(4,minmax(0,1fr))}
+.seg button{padding:6px 0;font-family:var(--f-mono);font-size:13px;background:var(--chip);border-color:transparent}
+.tier{font-family:var(--f-mono);font-size:11px;font-weight:500;padding:1px 5px;border-radius:4px;color:#fff;background:var(--t4);white-space:nowrap}
+.tier.t2{background:var(--t2)}.tier.t3{background:var(--t3)}.tier.t4{background:var(--t4)}.tier.t5{background:var(--t5)}.tier.t6{background:var(--t6)}.tier.t7{background:var(--t7);color:#2a2306}.tier.t8{background:var(--t8);color:#1a1d1f}
+.ench{font-family:var(--f-mono);font-size:11px;padding:1px 5px;border-radius:4px;color:#fff}
+.ench.e1{background:var(--e1)}.ench.e2{background:var(--e2)}.ench.e3{background:var(--e3)}.ench.e4{background:var(--e4);color:#231c04}
+/* recipe */
+.recipe-head{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:14px;align-items:center}
+@media (max-width:520px){.recipe-head{grid-template-columns:56px minmax(0,1fr)}.recipe-head button{grid-column:1/-1}}
+.recipe-head img{width:72px;height:72px;max-width:100%}
+.alt{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.cells{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:14px 0}
+.cell{background:var(--cell);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.cell .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.cell .v{font-family:var(--f-mono);font-size:18px;font-weight:500;overflow-wrap:anywhere}
+.cell.chk{flex-direction:row;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.cell.chk input{width:18px;height:18px;margin:0;flex:none}
+.cell.chk small{display:block;color:var(--muted);font-size:11px}
+.cell.profit.pos{background:var(--good-soft);border-color:transparent}.cell.profit.pos .v{color:var(--good)}
+.cell.profit.neg{background:var(--bad-soft);border-color:transparent}.cell.profit.neg .v{color:var(--bad)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:500;text-align:left;padding:7px 8px;background:var(--cell);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+th+th,td+td{border-left:1px solid var(--line)}
+td.n,th.n{text-align:right;white-space:nowrap;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+th.n{font-family:var(--f-body)}
+tr.made td{background:var(--cell)}
+.ing{display:flex;gap:8px;align-items:center;min-width:170px}
+.ing img{width:32px;height:32px;flex:none}
+.ing .nm{font-weight:500}
+td select{width:100%;min-width:130px}
+td input.price{width:100px;text-align:right}
+.edited{border-color:var(--warn)!important}
+.sell{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:14px}
+.cities{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:10px}
+.city-cell{font-size:12px;padding:6px 8px;border-radius:6px;background:var(--cell);border:1px solid var(--line);display:flex;justify-content:space-between;gap:6px}
+.city-cell .mono{text-align:right}
+.city-cell.best{border-color:var(--good)}
+.city-cell.low{border-color:var(--accent)}
+.tag{font-size:10px;text-transform:uppercase;letter-spacing:.05em}.tag.best{color:var(--good)}.tag.low{color:var(--accent)}
+.subhead{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 6px}
+/* plan */
+.plan-list{display:flex;flex-direction:column;gap:6px}
+.plan-item{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--cell)}
+.plan-item img{width:32px;height:32px}
+.plan-item .x{padding:2px 9px}
+.plan-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+@media (max-width:640px){.plan-sum{grid-template-columns:minmax(0,1fr)}}
+.plan-tbl input.pq{width:84px;text-align:right}
+.plan-tbl select{min-width:120px}
+.plan-tbl td.pos{color:var(--good)} .plan-tbl td.neg{color:var(--bad)}
+.plan-tbl tfoot td{font-weight:600;background:var(--cell);border-top:1px solid var(--line)}
+.plan-tbl .x{padding:2px 9px}
+/* shopping */
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:10px}
+@media (max-width:520px){.shop-grid{grid-template-columns:minmax(0,1fr)}}
+.shop-city{border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0}
+.shop-city h3{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:8px 10px;background:var(--cell);border-bottom:1px solid var(--line)}
+.shop-city .tbl{border:0;border-radius:0}
+.shop-city table{font-size:13px}
+.shop-city td,.shop-city th{padding:6px 6px}
+.shop-city th{font-size:10px;background:transparent}
+.shop-item{display:flex;align-items:center;gap:6px;min-width:90px}
+.shop-city th{letter-spacing:.02em}
+.shop-item img{width:22px;height:22px;flex:none}
+.note{font-size:12px;color:var(--muted);margin:0;max-width:90ch}
+.empty{color:var(--muted);font-size:13px;padding:8px 0}
+#tour{position:fixed;inset:0;z-index:50}
+.tour-spot{position:fixed;border-radius:10px;box-shadow:0 0 0 9999px rgba(10,16,13,.62);outline:2px solid var(--accent);transition:all .25s ease;pointer-events:none}
+.tour-spot.center{left:50%;top:40%;width:0;height:0;outline:0}
+.tour-card{position:fixed;width:min(380px,calc(100vw - 32px));background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;gap:8px;transition:top .25s ease,left .25s ease}
+.tour-card h3{font-size:19px}
+.tour-card p{margin:0;line-height:1.5}
+.tour-step{font-size:11px;color:var(--muted)}
+.tour-btns{display:flex;gap:8px;align-items:center;margin-top:6px}
+#tourSkip{border-color:transparent;background:transparent;color:var(--muted);padding-inline:4px}
+@media (prefers-reduced-motion:reduce){.tour-spot,.tour-card{transition:none}}
+#results{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:640px){#results{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.groups{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;margin:14px 0}
+@media (max-width:1100px){.groups{grid-template-columns:minmax(0,1fr)}}
+.group{border:1px dashed var(--line);border-radius:10px;padding:8px;min-width:0}
+.group .cells{margin:0}
+.group-name{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:2px 4px 8px}
+.cell small.alt{font-size:11px}
+.shop-tools{display:flex;justify-content:flex-end;margin-bottom:8px}
+.shop-tools button{font-size:12px;padding:4px 10px}
+th.have-h,td.have-c{text-align:center;width:1%;white-space:nowrap}
+tr.is-have td{opacity:.5}
+tr.is-have td.have-c{opacity:1}
+tr.is-have .shop-item span{text-decoration:line-through}
+.sw{position:relative;display:inline-block;width:34px;height:20px;cursor:pointer}
+.sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.sw span{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .15s}
+.sw span::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--panel);transition:transform .15s}
+.sw input:checked+span{background:var(--good)}
+.sw input:checked+span::after{transform:translateX(14px)}
+.sw input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.sw span,.sw span::after{transition:none}}
+textarea#copyArea{width:100%;height:160px;margin-top:8px;font-family:var(--f-mono);font-size:12px}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1 id="title">Котёл алхимика</h1>
+      <div class="sub" id="dataInfo"></div>
+    </div>
+    <div class="controls" id="topControls">
+      <label class="ctl" for="lang"><span data-t="lang"></span><select id="lang"><option value="ru">Русский</option><option value="en">English</option></select></label>
+      <label class="ctl" for="server"><span data-t="server"></span><select id="server"><option value="europe">Europe</option><option value="west">Americas</option><option value="east">Asia</option></select></label>
+      <label class="ctl" for="priceMode"><span data-t="price"></span><select id="priceMode"><option value="avg" data-t="avg"></option><option value="now" data-t="now"></option></select></label>
+      <label class="ctl" for="auto" data-local hidden><span data-t="auto"></span><select id="auto"><option value="0" data-t="off"></option><option value="5" data-t="m5"></option><option value="10" data-t="m10"></option><option value="30" data-t="m30"></option></select></label>
+      <button class="primary" id="refresh" data-t="refresh"></button>
+      <button id="help" data-t="tour"></button>
+    </div>
+  </header>
+  <div class="status" id="status" hidden></div>
+
+  <nav class="tabs" id="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-potion" data-tab="potion" data-t="tabPotions"></button>
+    <button class="tab" role="tab" id="tab-refine" data-tab="refine" data-t="tabRefine"></button>
+  </nav>
+
+  <div class="row1">
+    <aside class="panel shelf" id="picker" aria-label="Items"></aside>
+    <main class="panel" id="main"></main>
+  </div>
+
+  <div class="row2">
+    <section class="panel" id="planPanel">
+      <div class="panel-head"><h2 id="planTitle"></h2><button id="clearPlan" data-t="clear"></button></div>
+      <div id="plan"></div>
+    </section>
+    <section class="panel" id="shopPanel">
+      <div class="panel-head"><h2 id="shopTitle"></h2><button id="copyShop" data-t="copy"></button></div>
+      <div id="shop"></div>
+      <textarea id="copyArea" hidden aria-label="Shopping list text"></textarea>
+    </section>
+  </div>
+  <p class="note"><span id="note"></span> <span class="mono" id="ver"></span></p>
+</div>
+<div id="tour" hidden>
+  <div class="tour-spot" id="tourSpot"></div>
+  <div class="tour-card" id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
+    <div class="tour-step mono" id="tourStep"></div>
+    <h3 id="tourTitle"></h3>
+    <p id="tourText"></p>
+    <div class="tour-btns"><button id="tourSkip"></button><span style="flex:1"></span><button id="tourBack"></button><button class="primary" id="tourNext"></button></div>
+  </div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const APP_VERSION = "2.4.0";
+const CITIES = ["Brecilien","Bridgewatch","Martlock","Thetford","Fort Sterling","Lymhurst","Caerleon"];
+const FAMILY_ORDER = ["HEAL","ENERGY","REVIVE","STONESKIN","SLOWFIELD","COOLDOWN","CLEANSE","MOB_RESET","CLEANSE2","ACID","BERSERK","LAVA","GATHER","TORNADO","LIFEWARD"];
+const FAM = {
+  ru:{HEAL:"Здоровье",ENERGY:"Энергия",REVIVE:"Гигант",STONESKIN:"Защита",SLOWFIELD:"Вязкая настойка",COOLDOWN:"Яд",CLEANSE:"Невидимость",MOB_RESET:"Успокаивающее",CLEANSE2:"Очищающее",ACID:"Кислотное",BERSERK:"Берсерк",LAVA:"Адское пламя",GATHER:"Собиратель",TORNADO:"Буря в стакане",LIFEWARD:"Оберег"},
+  en:{HEAL:"Healing",ENERGY:"Energy",REVIVE:"Gigantify",STONESKIN:"Resistance",SLOWFIELD:"Sticky",COOLDOWN:"Poison",CLEANSE:"Invisibility",MOB_RESET:"Calming",CLEANSE2:"Cleansing",ACID:"Acid",BERSERK:"Berserk",LAVA:"Hellfire",GATHER:"Gathering",TORNADO:"Tornado in a Bottle",LIFEWARD:"Lifeward"}
+};
+// Refining families: raw -> refined, and the royal city with the refining bonus.
+const RFAM = [
+  {key:"LEATHER",raw:"HIDE",city:"Martlock",ru:"Кожа",en:"Leather",rawRu:"шкура",rawEn:"hide"},
+  {key:"METALBAR",raw:"ORE",city:"Thetford",ru:"Слитки",en:"Metal bars",rawRu:"руда",rawEn:"ore"},
+  {key:"CLOTH",raw:"FIBER",city:"Lymhurst",ru:"Ткань",en:"Cloth",rawRu:"волокно",rawEn:"fiber"},
+  {key:"PLANKS",raw:"WOOD",city:"Fort Sterling",ru:"Доски",en:"Planks",rawRu:"древесина",rawEn:"wood"},
+  {key:"STONEBLOCK",raw:"ROCK",city:"Bridgewatch",ru:"Каменные блоки",en:"Stone blocks",rawRu:"камень",rawEn:"stone"}
+];
+const I18N = {
+ ru:{title:"Котёл алхимика",lang:"Язык",server:"Сервер",price:"Цена",avg:"Средняя за 7 дней",now:"Текущая на рынке",auto:"Автообновление",off:"Выключено",m5:"Каждые 5 мин",m10:"Каждые 10 мин",m30:"Каждые 30 мин",refresh:"Обновить цены",
+   tabPotions:"Зелья",tabRefine:"Перекрафт",gCraft:"Крафт",planQty:"Нужно",toSell:"Продать, шт.",spent:"Сырьё и станок",chainShort:"цепочка от T2",daily:"Бонус дня",dailyNone:"Нет",dailyHintPotion:"если сегодня бонус на зелья",dailyHintRefine:"если сегодня бонус на этот материал",notIsland:"не на острове",gFees:"Налоги и станок",premium:"Премиум",salesTax:"налог с продажи",stationFee:"Станок за 1 крафт",stationHint:"серебро, как в окне крафта; свой остров — 0",stationTotal:"Станок",toBuy:"Докупить на",haveWorth:"уже есть на",afterTax:"после налога",profitHaveNote:"То, что уже есть, считается по рыночной цене: его можно было бы продать.",have:"Есть",clearHave:"Снять все «Есть»",tour:"Обучение",tourNext:"Далее",tourBack:"Назад",tourSkip:"Пропустить",tourDone:"Готово",version:"Версия",
+   plan:"План крафта",clear:"Очистить",shop:"Список закупки",copy:"Копировать",copied:"Скопировано",search:"Найти зелье…",nothing:"Ничего не найдено",
+   material:"Материал",tierL:"Тир",enchL:"Зачарование",profileShort:"бонус",
+   perCraft:"шт. за крафт",add:"Добавить в план",qtyPotion:"Сколько зелий нужно",qtyRefine:"Сколько произвести",buyWhere:"Где покупать сырьё",cheapestCity:"В самом дешёвом городе",allIn:"Всё в: ",
+   cityBonus:"Профильный город",focus:"Фокус",rrr:"Возврат ресурсов",chain:"Предыдущий тир делать самому",chainHint:"иначе он покупается",focusCost:"Фокус на всё",
+   ing:"Ингредиент",per:"За крафт",buy:"Купить",city:"Город",unit:"Цена за шт.",sum:"Сумма",cheapestOpt:"Дешевле всего",asAbove:"Как выбрано выше",pricesByCity:"Цены этого предмета по городам",cheapTag:"дешевле всего",dearTag:"дороже всего",noData:"нет данных",noReturn:"Без возврата: ",
+   madeHere:"Делаешь сам",intermediate:"Промежуточные (делаешь сам)",
+   crafts:"Крафтов",pcs:"шт.",matTotal:"Сырьё всего",perUnit:"Себестоимость 1 шт.",revenue:"Выручка после налога",profit:"Профит",
+   sellIn:"Продавать в",sellPrice:"Цена продажи",volume:"Продаётся в день",perDay:"/день",resetOver:"Сбросить ручные цены",noPrices:"Нет цен по этому предмету. Нажми «Обновить цены» или впиши цену вручную.",
+   planEmpty:"Пусто. Выбери предмет, укажи количество и нажми «Добавить в план».",shopEmpty:"Появится, когда в плане будет хотя бы один предмет.",
+   invest:"Вложение",item:"Предмет",count:"Кол-во, шт.",total:"итого",materials:"сырьё",noPrice:"нет цены",remove:"Убрать из плана",
+   txtQty:"количество",txtPrice:"цена",txtSum:"сумма",txtPer:"за шт.",txtTotal:"Итого",
+   snapshot:"Встроенный снимок цен от ",updated:"Цены обновлены ",src:" · источник: Albion Online Data Project",srv:" · сервер ",
+   justNow:"только что",minAgo:" мин назад",hAgo:" ч назад",
+   loading:"Загружаю цены…",loadingClaude:"Загружаю цены через встроенный браузер Claude…",loadFail:"Не удалось загрузить цены: ",loadFail2:". Показаны последние известные цены.",
+   onlyApp:"В веб-версии обновление работает только в приложении Claude для компьютера. Здесь показан снимок цен.",notAllowed:"Доступ к браузеру Claude не разрешён для этой страницы. Разреши его в меню прав и попробуй снова.",
+   cancelled:"Загрузка цен отменена.",browserFail:"Браузер не открыл сайт с ценами: ",genericFail:"Не удалось загрузить цены. Попробуй ещё раз чуть позже.",badFormat:"Сайт с ценами ответил в неожиданном формате. Показан снимок цен.",
+   note:"Цены: Albion Online Data Project (собираются игроками, могут отставать на часы). Иконки: render.albiononline.com. Рецепты и названия: игровые файлы (ao-bin-dumps). Возврат ресурсов применяется ко всем ингредиентам, кроме редких алхимических (рога, когти, корни и т.п.) — они не возвращаются; количество к покупке рассчитано с запасом: возврат округляется вниз и крафтится заново в несколько заходов. Налог с продажи: 4% с премиумом или 8% без него, плюс 2,5% за выставление ордера. Налог станка — то, что указано за 1 крафт; при цепочке перекрафта он считается только для последнего тира. Фокус указан без учёта специализации: с прокачкой он меньше."},
+ en:{title:"Alchemist's Cauldron",lang:"Language",server:"Server",price:"Price",avg:"7-day average",now:"Current market",auto:"Auto-refresh",off:"Off",m5:"Every 5 min",m10:"Every 10 min",m30:"Every 30 min",refresh:"Refresh prices",
+   tabPotions:"Potions",tabRefine:"Refining",gCraft:"Craft",planQty:"Wanted",toSell:"Sell, pcs",spent:"Materials and station",chainShort:"chain from T2",daily:"Daily bonus",dailyNone:"None",dailyHintPotion:"if potions have today's bonus",dailyHintRefine:"if this material has today's bonus",notIsland:"not on an island",gFees:"Taxes and station",premium:"Premium",salesTax:"sales tax",stationFee:"Station fee per craft",stationHint:"silver, as in the craft window; own island — 0",stationTotal:"Station",toBuy:"Still to buy",haveWorth:"already have",afterTax:"after tax",profitHaveNote:"Items you already have count at market price: you could sell them instead.",have:"Have",clearHave:"Clear all “Have”",tour:"Tour",tourNext:"Next",tourBack:"Back",tourSkip:"Skip",tourDone:"Done",version:"Version",
+   plan:"Craft plan",clear:"Clear",shop:"Shopping list",copy:"Copy",copied:"Copied",search:"Find a potion…",nothing:"Nothing found",
+   material:"Material",tierL:"Tier",enchL:"Enchantment",profileShort:"bonus",
+   perCraft:"per craft",add:"Add to plan",qtyPotion:"Potions needed",qtyRefine:"Amount to make",buyWhere:"Where to buy materials",cheapestCity:"Cheapest city",allIn:"All in: ",
+   cityBonus:"Bonus city",focus:"Focus",rrr:"Resource return",chain:"Make the previous tier myself",chainHint:"otherwise it is bought",focusCost:"Focus for all",
+   ing:"Ingredient",per:"Per craft",buy:"Buy",city:"City",unit:"Unit price",sum:"Total",cheapestOpt:"Cheapest",asAbove:"As set above",pricesByCity:"This item's prices by city",cheapTag:"cheapest",dearTag:"highest",noData:"no data",noReturn:"Without return: ",
+   madeHere:"You make it",intermediate:"Intermediate (you make them)",
+   crafts:"Crafts",pcs:"pcs",matTotal:"Materials total",perUnit:"Cost per unit",revenue:"Revenue after tax",profit:"Profit",
+   sellIn:"Sell in",sellPrice:"Sell price",volume:"Sold per day",perDay:"/day",resetOver:"Reset manual prices",noPrices:"No prices for this item. Press “Refresh prices” or type a price manually.",
+   planEmpty:"Empty. Pick an item, set the amount and press “Add to plan”.",shopEmpty:"Appears once the plan has at least one item.",
+   invest:"Investment",item:"Item",count:"Qty",total:"total",materials:"materials",noPrice:"no price",remove:"Remove from plan",
+   txtQty:"qty",txtPrice:"price",txtSum:"total",txtPer:"each",txtTotal:"Total",
+   snapshot:"Built-in price snapshot from ",updated:"Prices updated ",src:" · source: Albion Online Data Project",srv:" · server ",
+   justNow:"just now",minAgo:" min ago",hAgo:" h ago",
+   loading:"Loading prices…",loadingClaude:"Loading prices through Claude's built-in browser…",loadFail:"Could not load prices: ",loadFail2:". Showing the last known prices.",
+   onlyApp:"In the web version, refreshing works only in the Claude desktop app. Showing the price snapshot.",notAllowed:"This page is not allowed to use Claude's browser. Allow it in the permissions menu and try again.",
+   cancelled:"Price loading cancelled.",browserFail:"The browser could not open the price site: ",genericFail:"Could not load prices. Try again a bit later.",badFormat:"The price site answered in an unexpected format. Showing the snapshot.",
+   note:"Prices: Albion Online Data Project (crowd-sourced, can lag by hours). Icons: render.albiononline.com. Recipes and names: game files (ao-bin-dumps). Resource return applies to all ingredients except rare alchemy ones (horns, claws, roots and so on), which are never returned; amounts to buy include a margin: returns are rounded down and crafted again over several rounds. Sales tax: 4% with premium or 8% without, plus 2.5% to place a sell order. Station fee is what you enter per craft; in a refining chain it applies to the final tier only. Focus is shown without specialization; leveling lowers it."}
+};
+
+const DEFAULTS = { lang:"ru", tab:"potion", tourDone:false, premium:true, station:{}, have:{}, server:"europe", priceMode:"avg", auto:10, buyMode:"auto", over:{}, cityPick:{},
+  potion:{ sel:"T8_POTION_LAVA", ench:0, qty:120, sellCity:"Brecilien", cityBonus:true, focus:false },
+  refine:{ fam:"LEATHER", tier:5, ench:0, qty:500, sellCity:"Martlock", cityBonus:true, focus:false, chain:false },
+  plans:{ potion:[{id:"T8_POTION_LAVA",qty:120,sellCity:"Brecilien"},{id:"T5_POTION_MOB_RESET",qty:150,sellCity:"Brecilien"},{id:"T7_POTION_REVIVE",qty:100,sellCity:"Martlock"},{id:"T6_POTION_LAVA",qty:100,sellCity:"Brecilien"},{id:"T5_POTION_CLEANSE2",qty:50,sellCity:"Brecilien"}], refine:[] } };
+const st = structuredClone(DEFAULTS);
+let PRICES = DATA.prices, pricesAt = DATA.at, pricesLive = false;
+const LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+const ls = { get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}} };
+function loadState(saved){
+  if(!saved || typeof saved!=="object") return;
+  // migrate the old flat state (potions only)
+  if(saved.sel && !saved.potion){ saved.potion={sel:saved.sel,qty:saved.qty,sellCity:saved.sellCity,cityBonus:saved.cityBonus,focus:saved.focus}; }
+  for(const k of Object.keys(DEFAULTS)){
+    if(saved[k]===undefined) continue;
+    if(k==="potion"||k==="refine") Object.assign(st[k], saved[k]); else st[k]=saved[k];
+  }
+  if(!DATA.recipes[st.potion.sel]) st.potion.sel="T8_POTION_LAVA";
+  st.station ||= {}; st.have ||= {};
+  // older versions kept one shared plan: split it into the potion and refining plans
+  if(Array.isArray(saved.plan) && !saved.plans){ st.plans={ potion:saved.plan.filter(p=>isPotion(p.id)), refine:saved.plan.filter(p=>!isPotion(p.id)) }; }
+  delete st.plan;
+  st.plans ||= {potion:[],refine:[]};
+  for(const k of ["potion","refine"]) st.plans[k] = (st.plans[k]||[]).filter(p=>DATA.recipes[p.id] && isPotion(p.id)===(k==="potion"));
+}
+let saveTimer=null;
+function save(){
+  ls.set("kotel_state", st);
+  if(LOCAL){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>fetch("/api/state",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(st)}).catch(()=>{}),400); }
+}
+
+const $ = s => document.querySelector(s);
+const T = k => I18N[st.lang][k] ?? I18N.ru[k] ?? k;
+const fmt = n => (n==null||!isFinite(n)) ? "—" : Math.round(n).toLocaleString(st.lang==="ru"?"ru-RU":"en-US");
+const tierOf = id => +id[1];
+const enchOf = id => +((/@(\d)$/.exec(id)||[])[1]||0);
+const baseOf = id => id.replace(/@\d$/,"");
+const isPotion = id => /_POTION_/.test(id);
+const icon = id => DATA.icons[id] || (LOCAL ? "/api/icon/"+encodeURIComponent(id) : (DATA.icons[baseOf(id)]||""));
+const img = (id, cls="") => `<img alt="" class="${cls}" src="${icon(id)}" onerror="this.style.visibility='hidden'">`;
+const nm = id => (st.lang==="en" ? DATA.items[id]?.en : DATA.items[id]?.ru) || id;
+const alt = id => (st.lang==="en" ? DATA.items[id]?.ru : DATA.items[id]?.en) || "";
+const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const badge = id => `<span class="tier t${tierOf(id)}">T${tierOf(id)}${enchOf(id)?"."+enchOf(id):""}</span>`;
+const rfamOf = id => RFAM.find(f=>new RegExp(`^T\\d_${f.key}(_LEVEL\\d@\\d)?$`).test(id));
+const refineId = (fam,t,e) => `T${t}_${fam}${e?`_LEVEL${e}@${e}`:""}`;
+const maxEnch = (fam,t) => (fam==="STONEBLOCK"||t<4) ? 0 : 4;
+
+function cityPrice(id, city){ const e = PRICES[id]?.[city]; if(!e) return 0; return st.priceMode==="now" ? (e.s||e.a||0) : (e.a||e.s||0); }
+// Cheapest city with a real market: prefer cities that trade 50+ a day, so one stray order (often in Caerleon) does not win.
+function cheapest(id){
+  const pick = minVol => { let b=null; for(const c of CITIES){ const p=cityPrice(id,c), v=PRICES[id]?.[c]?.v; if(p>0 && (minVol===0 || (v!=null && v>=minVol)) && (!b||p<b.p)) b={c,p}; } return b; };
+  return pick(50) || pick(0);
+}
+function buyCity(id){ return st.cityPick[id] || (st.buyMode!=="auto" ? st.buyMode : (cheapest(id)?.c || "Brecilien")); }
+function unitPrice(id){ return st.over[id]!=null ? st.over[id] : cityPrice(id, buyCity(id)); }
+function sellPrice(id, city){ const k="sell:"+id; return st.over[k]!=null ? st.over[k] : cityPrice(id, city); }
+// Sales tax 4% with premium or 8% without, plus 2.5% to place a sell order.
+const feeRate = () => (st.premium?0.04:0.08) + 0.025;
+const feePct = () => (feeRate()*100).toFixed(1).replace(/\.0$/,"").replace(".", st.lang==="ru"?",":".") + "%";
+const cfg = id => isPotion(id) ? st.potion : st.refine;
+// Production bonus: base 18%, crafting bonus city +15%, refining bonus city +40%, focus +59%.
+// Daily bonus adds +10% or +20% production bonus to the categories the game highlights that day.
+function rrrFor(id){ const c=cfg(id); return 1 - 1/(1.18 + (c.cityBonus?(isPotion(id)?0.15:0.40):0) + (c.focus?0.59:0) + (+c.daily||0)); }
+
+// How much to buy so that `crafts` crafts really come out. Returned resources arrive only after a batch and are
+// rounded down, so the returns are crafted again in further rounds; the plan adds whatever the last round lacks.
+// Rare alchemy ingredients (horns, claws, roots…) are never returned: they are bought for every craft.
+function planBuy(ing, crafts, rrr, noReturn=[]){
+  const ids=Object.keys(ing), back=i=>noReturn.includes(i)?0:rrr;
+  const buy=Object.fromEntries(ids.map(i=>[i, Math.ceil(ing[i]*crafts*(1-back(i)))]));
+  let rounds=[];
+  for(let guard=0; guard<5000; guard++){
+    const have={...buy}; let total=0; rounds=[];
+    while(total<crafts){
+      const c=Math.min(crafts-total, ...ids.map(i=>Math.floor(have[i]/ing[i])));
+      if(c<=0) break;
+      rounds.push(c); total+=c;
+      for(const i of ids) have[i] += Math.floor(c*ing[i]*back(i)) - c*ing[i];
+    }
+    if(total>=crafts) break;
+    for(const i of ids) if(have[i] < ing[i]) buy[i] += ing[i]-have[i];
+  }
+  return {buy, rounds};
+}
+const pct = x => (x*100).toFixed(1).replace(".", st.lang==="ru"?",":".") + "%";
+
+// Recursive cost: buys raw materials, and (when chain is on) makes the previous-tier refined item itself.
+function calc(id, qty, chain){
+  const r = DATA.recipes[id], rrr = rrrFor(id);
+  const crafts = Math.max(1, Math.ceil(qty / r.n)), made = crafts * r.n;
+  const lines=[], madeLines=[]; let focus = (r.focus||0)*crafts;
+  const pb = planBuy(r.ing, crafts, rrr, r.nr||[]);
+  for(const [iid,q] of Object.entries(r.ing)){
+    const need = pb.buy[iid];
+    if(chain && !isPotion(id) && DATA.recipes[iid]){
+      const sub = calc(iid, need, chain);
+      madeLines.push({iid, need, per:q, cost:sub.cost}, ...sub.madeLines);
+      for(const l of sub.lines) lines.push(l);
+      focus += sub.focus;
+    } else {
+      const p=unitPrice(iid); lines.push({iid, per:q, need, gross:q*crafts, city:buyCity(iid), p, sum:need*p, missing:!p});
+    }
+  }
+  // merge duplicate bought materials (chains can ask for the same item twice)
+  const merged={}; for(const l of lines){ const m=merged[l.iid]; if(m){ m.need+=l.need; m.gross+=l.gross; m.sum+=l.sum; } else merged[l.iid]={...l}; }
+  const out=Object.values(merged), cost=out.reduce((a,l)=>a+l.sum,0);
+  const station=(st.station[id]||0)*crafts;
+  return {crafts, made, rounds:pb.rounds, lines:out, madeLines, cost, station, perUnit:(cost+station)/made, focus, missing:out.some(l=>l.missing)};
+}
+const curId = () => st.tab==="potion" ? baseOf(st.potion.sel)+(st.potion.ench?"@"+st.potion.ench:"") : refineId(st.refine.fam, st.refine.tier, Math.min(st.refine.ench, maxEnch(st.refine.fam, st.refine.tier)));
+
+function applyStatic(){
+  document.documentElement.lang = st.lang;
+  document.title = T("title"); $("#title").textContent = T("title");
+  document.querySelectorAll("[data-t]").forEach(el=>el.textContent=T(el.dataset.t));
+  $("#note").textContent = T("note"); $("#ver").textContent = T("version")+" "+APP_VERSION;
+  $("#lang").value=st.lang; $("#server").value=st.server; $("#priceMode").value=st.priceMode; $("#auto").value=String(st.auto);
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===st.tab)));
+  if(LOCAL) document.querySelectorAll("[data-local]").forEach(el=>el.hidden=false);
+}
+function renderAll(){ applyStatic(); renderInfo(); renderPicker(); renderMain(); renderPlan(); }
+document.querySelector(".tabs").addEventListener("click", e=>{ const b=e.target.closest(".tab"); if(!b) return; st.tab=b.dataset.tab; save(); applyStatic(); renderPicker(); renderMain(); renderPlan(); });
+
+/* ---------- picker ---------- */
+let searchQ="";
+function renderPicker(){
+  if(st.tab==="potion"){
+    $("#picker").innerHTML = `<input type="search" id="search" aria-label="${T("search")}" placeholder="${T("search")}" value="${esc(searchQ)}">
+      <div><div class="fam-name">${T("enchL")}</div><div class="seg p">${[0,1,2,3].map(e=>`<button data-pench="${e}" aria-pressed="${e===(st.potion.ench||0)}">.${e}</button>`).join("")}</div></div>
+      <div id="shelf"></div>`;
+    renderShelf();
+  } else {
+    const r=st.refine, mx=maxEnch(r.fam, r.tier);
+    $("#picker").innerHTML = `
+      <div class="fam-name">${T("material")}</div>
+      <div style="display:flex;flex-direction:column;gap:6px">${RFAM.map(f=>`<button class="rfam" data-fam="${f.key}" aria-pressed="${f.key===r.fam}">${img(refineId(f.key,4,0))}<span><b>${f[st.lang]}</b><span class="alt">${st.lang==="ru"?f.rawRu:f.rawEn} → ${f[st.lang].toLowerCase()} · ${T("profileShort")} ${f.city}</span></span></button>`).join("")}</div>
+      <div class="fam-name">${T("tierL")}</div>
+      <div class="seg t">${[2,3,4,5,6,7,8].map(t=>`<button data-tier="${t}" aria-pressed="${t===r.tier}">T${t}</button>`).join("")}</div>
+      <div class="fam-name">${T("enchL")}</div>
+      <div class="seg e">${[0,1,2,3,4].map(e=>`<button data-ench="${e}" aria-pressed="${e===Math.min(r.ench,mx)}" ${e>mx?"disabled":""}>.${e}</button>`).join("")}</div>`;
+  }
+}
+function renderShelf(){
+  const q = searchQ.trim().toLowerCase(); const fams = {};
+  for(const id of Object.keys(DATA.recipes)){
+    if(!isPotion(id) || enchOf(id)) continue;
+    const f = id.replace(/^T\d_POTION_/,"");
+    const hay = [DATA.items[id]?.ru, DATA.items[id]?.en, FAM.ru[f], FAM.en[f]].join(" ").toLowerCase();
+    if(q && !hay.includes(q)) continue;
+    (fams[f] ||= []).push(id);
+  }
+  $("#shelf").innerHTML = FAMILY_ORDER.filter(f=>fams[f]).map(f=>`<div><div class="fam-name">${FAM[st.lang][f]}</div><div class="fam-row">${
+    fams[f].sort().map(id=>`<button class="pot" data-id="${id}" aria-pressed="${id===baseOf(st.potion.sel)}" title="${esc(nm(id))}">${img(id)}${badge(id)}</button>`).join("")}</div></div>`).join("")
+    || `<div class="empty">${T("nothing")}</div>`;
+}
+$("#picker").addEventListener("input", e=>{ if(e.target.id==="search"){ searchQ=e.target.value; renderShelf(); } });
+$("#picker").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b||b.disabled) return;
+  if(b.dataset.id){ st.potion.sel=b.dataset.id; }
+  else if(b.dataset.pench){ st.potion.ench=+b.dataset.pench; save(); renderPicker(); renderMain(); return; }
+  else if(b.dataset.fam){ st.refine.fam=b.dataset.fam; st.refine.sellCity = RFAM.find(f=>f.key===b.dataset.fam).city; }
+  else if(b.dataset.tier){ st.refine.tier=+b.dataset.tier; }
+  else if(b.dataset.ench){ st.refine.ench=+b.dataset.ench; }
+  else return;
+  save(); if(st.tab==="potion") renderShelf(); else renderPicker(); renderMain();
+});
+
+/* ---------- recipe sheet ---------- */
+function cityOptions(selected, id, withAuto){
+  let auto="";
+  if(withAuto){
+    const ch=cheapest(id), def=st.buyMode!=="auto"?st.buyMode:ch?.c, p=def?cityPrice(id,def):0;
+    auto=`<option value="">${st.buyMode==="auto"?T("cheapestOpt"):T("asAbove")}: ${def||T("noData")}${p?" · "+fmt(p):""}</option>`;
+  }
+  return auto + CITIES.map(c=>{ const p=cityPrice(id,c); return `<option value="${c}" ${c===selected?"selected":""}>${c}${p?" · "+fmt(p):""}</option>`; }).join("");
+}
+function renderMain(){
+  const id=curId(), r=DATA.recipes[id], c0=cfg(id), pot=isPotion(id), chain=!pot&&c0.chain;
+  if(!r){ $("#main").innerHTML=`<div class="empty">${T("nothing")}</div>`; return; }
+  const c=calc(id, c0.qty, chain);
+  const sp=sellPrice(id, c0.sellCity), revenue=c.made*sp*(1-feeRate()), spent=c.cost+c.station, profit=revenue-spent, margin=spent?profit/spent*100:0;
+  const vol=PRICES[id]?.[c0.sellCity]?.v;
+  const chips=CITIES.map(cc=>({cc,p:cityPrice(id,cc),v:PRICES[id]?.[cc]?.v})).filter(x=>x.p);
+  const bestP=Math.max(0,...chips.map(x=>x.p)), lowP=Math.min(...chips.map(x=>x.p)); const okProfit = sp && !c.missing;
+  const fam = rfamOf(id);
+  const bonusLabel = pot ? `${T("cityBonus")} <small>${T("notIsland")}</small>` : `${T("cityBonus")} <small>${fam.city} · ${T("notIsland")}</small>`;
+  const hasPrev = !pot && Object.keys(r.ing).some(k=>DATA.recipes[k]);
+  $("#main").innerHTML = `
+  <div class="recipe-head">
+    ${img(id)}
+    <div style="min-width:0">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h2>${esc(nm(id))}</h2>${badge(id)}</div>
+      <div class="alt">${esc(alt(id))} · ${r.n} ${T("perCraft")}</div>
+    </div>
+    <button class="primary" id="addPlan">${T("add")}</button>
+  </div>
+  <div class="groups" id="setup">
+  <div class="group"><div class="group-name">${T("gCraft")}</div><div class="cells">
+    <label class="cell" for="qty"><span class="k">${pot?T("qtyPotion"):T("qtyRefine")}</span><input type="number" id="qty" min="1" step="1" value="${c0.qty}"></label>
+    <label class="cell" for="buyMode"><span class="k">${T("buyWhere")}</span><select id="buyMode"><option value="auto" ${st.buyMode==="auto"?"selected":""}>${T("cheapestCity")}</option>${CITIES.map(cc=>`<option value="${cc}" ${st.buyMode===cc?"selected":""}>${T("allIn")}${cc}</option>`).join("")}</select></label>
+    <label class="cell chk" for="cityBonus"><input type="checkbox" id="cityBonus" ${c0.cityBonus?"checked":""}><span>${bonusLabel}</span></label>
+    <label class="cell chk" for="focus"><input type="checkbox" id="focus" ${c0.focus?"checked":""}>${T("focus")}</label>
+    <label class="cell" for="daily"><span class="k">${T("daily")}</span><select id="daily">${[["0",T("dailyNone")],["0.1","+10%"],["0.2","+20%"]].map(([v,l])=>`<option value="${v}" ${String(+c0.daily||0)===v?"selected":""}>${l}</option>`).join("")}</select><small class="alt">${pot?T("dailyHintPotion"):T("dailyHintRefine")}</small></label>
+    ${hasPrev?`<label class="cell chk" for="chain"><input type="checkbox" id="chain" ${c0.chain?"checked":""}><span>${T("chain")}<small>${T("chainHint")}</small></span></label>`:""}
+    <div class="cell"><span class="k">${T("rrr")}</span><span class="v">${pct(rrrFor(id))}</span></div>
+    ${c0.focus?`<div class="cell"><span class="k">${T("focusCost")}</span><span class="v">${fmt(c.focus)}</span></div>`:""}
+  </div></div>
+  <div class="group"><div class="group-name">${T("gFees")}</div><div class="cells">
+    <label class="cell chk" for="premium"><input type="checkbox" id="premium" ${st.premium?"checked":""}><span>${T("premium")}<small>${T("salesTax")} ${feePct()}</small></span></label>
+    <label class="cell" for="station"><span class="k">${T("stationFee")}</span><input type="number" id="station" min="0" step="1" value="${st.station[id]||0}"><small class="alt">${T("stationHint")}</small></label>
+  </div></div>
+  </div>
+  <div class="tbl" id="ingTable"><table>
+    <thead><tr><th>${T("ing")}</th><th class="n">${T("per")}</th><th class="n">${T("buy")}</th><th>${T("city")}</th><th class="n">${T("unit")}</th><th class="n">${T("sum")}</th></tr></thead>
+    <tbody>${c.lines.map(l=>`<tr>
+      <td><div class="ing">${img(l.iid)}<div><div class="nm">${esc(nm(l.iid))} ${isPotion(id)?"":badge(l.iid)}</div><div class="alt">${esc(alt(l.iid))}</div></div></div></td>
+      <td class="n">${chain?"—":l.per}</td>
+      <td class="n" title="${T("noReturn")}${fmt(l.gross)}">${fmt(l.need)}</td>
+      <td><select data-city="${l.iid}" aria-label="${T("city")}">${cityOptions(st.cityPick[l.iid]||"", l.iid, true)}</select></td>
+      <td class="n"><input class="price ${st.over[l.iid]!=null?"edited":""}" type="number" min="0" data-price="${l.iid}" value="${l.p||""}" placeholder="${T("noData")}" aria-label="${T("unit")}"></td>
+      <td class="n">${l.missing?"—":fmt(l.sum)}</td></tr>`).join("")}</tbody></table></div>
+  ${c.madeLines.length?`<div class="subhead">${T("intermediate")}</div><div class="tbl"><table><thead><tr><th>${T("item")}</th><th class="n">${T("count")}</th><th class="n">${T("matTotal")}</th></tr></thead><tbody>${
+    c.madeLines.map(m=>`<tr class="made"><td><div class="ing">${img(m.iid)}<div class="nm">${esc(nm(m.iid))} ${badge(m.iid)}</div></div></td><td class="n">${fmt(m.need)}</td><td class="n">${fmt(m.cost)}</td></tr>`).join("")}</tbody></table></div>`:""}
+  <div class="cells" id="results">
+    <div class="cell"><span class="k">${T("crafts")}</span><span class="v">${fmt(c.crafts)} → ${fmt(c.made)} ${T("pcs")}</span></div>
+    <div class="cell"><span class="k">${T("matTotal")}</span><span class="v">${fmt(c.cost)}</span></div>
+    <div class="cell"><span class="k">${T("stationTotal")}</span><span class="v">${fmt(c.station)}</span></div>
+    <div class="cell"><span class="k">${T("perUnit")}</span><span class="v">${fmt(c.perUnit)}</span></div>
+    <div class="cell"><span class="k">${T("revenue")} ${feePct()}</span><span class="v">${sp?fmt(revenue):"—"}</span></div>
+    <div class="cell profit ${okProfit?(profit>=0?"pos":"neg"):""}"><span class="k">${T("profit")}</span><span class="v">${okProfit?(profit>=0?"+":"")+fmt(profit)+" ("+margin.toFixed(0)+"%)":"—"}</span></div>
+  </div>
+  <div class="sell" id="sellRow">
+    <label class="cell" for="sellCity"><span class="k">${T("sellIn")}</span><select id="sellCity">${CITIES.map(cc=>`<option value="${cc}" ${cc===c0.sellCity?"selected":""}>${cc}</option>`).join("")}</select></label>
+    <label class="cell" for="sellPrice"><span class="k">${T("sellPrice")}</span><input type="number" id="sellPrice" min="0" class="${st.over["sell:"+id]!=null?"edited":""}" value="${sp||""}" placeholder="${T("noData")}"></label>
+    <div class="cell"><span class="k">${T("volume")}</span><span class="v">${vol!=null?fmt(vol):"—"}</span></div>
+    ${Object.keys(st.over).length?`<button class="cell" id="resetOver" style="justify-content:center">${T("resetOver")}</button>`:""}
+  </div>
+  <div class="subhead">${T("pricesByCity")}</div>
+  <div class="cities" id="cityPrices">${chips.length?chips.map(x=>`<div class="city-cell ${x.p===bestP?"best":""} ${x.p===lowP&&chips.length>1?"low":""}"><span>${x.cc}${x.p===lowP&&chips.length>1?`<br><span class="tag low">${T("cheapTag")}</span>`:""}${x.p===bestP&&chips.length>1?`<br><span class="tag best">${T("dearTag")}</span>`:""}</span><span class="mono">${fmt(x.p)}${x.v!=null?`<br><span class="alt">${fmt(x.v)}${T("perDay")}</span>`:""}</span></div>`).join(""):`<div class="sub">${T("noPrices")}</div>`}</div>`;
+}
+$("#main").addEventListener("change", e=>{
+  const t=e.target, id=curId(), c0=cfg(id);
+  if(t.id==="qty") c0.qty=Math.max(1,Math.round(+t.value||1));
+  else if(t.id==="buyMode"){ st.buyMode=t.value; st.cityPick={}; }
+  else if(t.id==="cityBonus") c0.cityBonus=t.checked;
+  else if(t.id==="focus") c0.focus=t.checked;
+  else if(t.id==="daily") c0.daily=+t.value;
+  else if(t.id==="chain") c0.chain=t.checked;
+  else if(t.id==="premium") st.premium=t.checked;
+  else if(t.id==="station"){ const v=Math.max(0,Math.round(+t.value||0)); if(v) st.station[id]=v; else delete st.station[id]; }
+  else if(t.id==="sellCity"){ c0.sellCity=t.value; delete st.over["sell:"+id]; }
+  else if(t.id==="sellPrice"){ if(t.value==="") delete st.over["sell:"+id]; else st.over["sell:"+id]=+t.value; }
+  else if(t.dataset.city){ if(t.value) st.cityPick[t.dataset.city]=t.value; else delete st.cityPick[t.dataset.city]; delete st.over[t.dataset.city]; }
+  else if(t.dataset.price){ const k=t.dataset.price; if(t.value==="") delete st.over[k]; else st.over[k]=+t.value; }
+  else return;
+  save(); renderMain(); renderPlan();
+});
+$("#main").addEventListener("click", e=>{
+  if(e.target.id==="addPlan"){
+    const id=curId(), c0=cfg(id), chain=!isPotion(id)&&!!c0.chain;
+    const plan=curPlan(), ex=plan.find(p=>p.id===id);
+    if(ex){ ex.qty=c0.qty; ex.sellCity=c0.sellCity; ex.chain=chain; } else plan.push({id, qty:c0.qty, sellCity:c0.sellCity, chain});
+    save(); renderPlan();
+  }
+  if(e.target.id==="resetOver"){ st.over={}; save(); renderMain(); renderPlan(); }
+});
+
+/* ---------- plan + shopping ---------- */
+let shopText = "";
+const curPlan = () => st.plans[st.tab==="refine"?"refine":"potion"];
+function renderPlan(){
+  const plan=curPlan(), pot=st.tab!=="refine";
+  $("#planTitle").textContent = T("plan");
+  $("#shopTitle").textContent = T("shop");
+  if(!plan.length){ $("#plan").innerHTML=`<div class="empty">${T("planEmpty")}</div>`; $("#shop").innerHTML=`<div class="empty">${T("shopEmpty")}</div>`; shopText=""; return; }
+  let tCost=0, tRev=0, tStation=0, ok=true; const shop={};
+  const rows = plan.map((p,i)=>{
+    const c=calc(p.id,p.qty,!!p.chain), city=p.sellCity||"Brecilien", sp=sellPrice(p.id,city), rev=c.made*sp*(1-feeRate()), spent=c.cost+c.station, pr=rev-spent;
+    tCost+=c.cost; tStation+=c.station; tRev+=rev; if(!sp||c.missing) ok=false;
+    for(const l of c.lines){ const e=((shop[l.city] ||= {})[l.iid] ||= {need:0,sum:0,p:l.p}); e.need+=l.need; e.sum+=l.sum; }
+    return `<tr>
+      <td><div class="ing">${img(p.id)}<div class="nm">${esc(nm(p.id))} ${badge(p.id)}${p.chain?`<div class="alt">${T("chainShort")}</div>`:""}</div></div></td>
+      <td class="n"><input type="number" class="pq" min="1" data-pq="${i}" value="${p.qty}" aria-label="${T("count")}"></td>
+      <td class="n">${fmt(c.made)}</td>
+      <td><select data-pc="${i}" aria-label="${T("sellIn")}">${CITIES.map(cc=>`<option value="${cc}" ${cc===city?"selected":""}>${cc}</option>`).join("")}</select></td>
+      <td class="n">${sp?fmt(sp):"—"}</td>
+      <td class="n">${sp?fmt(rev):"—"}</td>
+      <td class="n">${fmt(spent)}</td>
+      <td class="n ${sp&&!c.missing?(pr>=0?"pos":"neg"):""}">${sp&&!c.missing?(pr>=0?"+":"")+fmt(pr):"—"}</td>
+      <td class="n"><button class="x" data-del="${i}" aria-label="${T("remove")}">×</button></td></tr>`;
+  }).join("");
+  const items = `<div class="tbl plan-tbl"><table><thead><tr><th>${T("item")}</th><th class="n">${T("planQty")}</th><th class="n">${T("toSell")}</th><th>${T("sellIn")}</th><th class="n">${T("unit")}</th><th class="n">${T("revenue")}</th><th class="n">${T("spent")}</th><th class="n">${T("profit")}</th><th></th></tr></thead><tbody>${rows}</tbody>
+    <tfoot><tr><td>${T("txtTotal")}</td><td></td><td></td><td></td><td></td><td class="n">${fmt(tRev)}</td><td class="n">${fmt(tCost+tStation)}</td><td class="n ${ok?(tRev-tCost-tStation>=0?"pos":"neg"):""}">${ok?((tRev-tCost-tStation)>=0?"+":"")+fmt(tRev-tCost-tStation):"—"}</td><td></td></tr></tfoot></table></div>`;
+  // Items marked "already have" are not bought, but profit still counts them at market price: you could sell them instead.
+  let toBuy=0, haveSum=0;
+  for(const c of Object.keys(shop)) for(const [iid,e] of Object.entries(shop[c])){ if(st.have[iid]) haveSum+=e.sum; else toBuy+=e.sum; }
+  const pr=tRev-tCost-tStation;
+  $("#plan").innerHTML = `${items}<div class="plan-sum">
+    <div class="cell"><span class="k">${T("toBuy")}</span><span class="v">${fmt(toBuy)}</span>${haveSum?`<small class="alt">${T("haveWorth")} ${fmt(haveSum)}</small>`:""}</div>
+    <div class="cell"><span class="k">${T("stationTotal")}</span><span class="v">${fmt(tStation)}</span></div>
+    <div class="cell profit ${ok?(pr>=0?"pos":"neg"):""}"><span class="k">${T("profit")} · ${T("afterTax")} ${feePct()}</span><span class="v">${ok?(pr>=0?"+":"")+fmt(pr):"—"}</span>${haveSum?`<small class="alt">${T("profitHaveNote")}</small>`:""}</div></div>`;
+  const order = CITIES.filter(c=>shop[c]);
+  const anyHave = Object.keys(st.have).length>0;
+  $("#shop").innerHTML = `${anyHave?`<div class="shop-tools"><button id="clearHave">${T("clearHave")}</button></div>`:""}<div class="shop-grid">${order.map(c=>{
+    const rows=Object.entries(shop[c]), sum=rows.reduce((a,[iid,e])=>a+(st.have[iid]?0:e.sum),0);
+    return `<div class="shop-city"><h3><span>${c}</span><span class="mono sub">${T("total")} ${fmt(sum)}</span></h3><div class="tbl"><table>
+      <thead><tr><th class="have-h">${T("have")}</th><th>${T("item")}</th><th class="n">${T("count")}</th><th class="n">${T("unit")}</th><th class="n">${T("sum")}</th></tr></thead><tbody>${
+      rows.map(([iid,e])=>`<tr class="${st.have[iid]?"is-have":""}"><td class="have-c"><label class="sw" title="${T("have")}"><input type="checkbox" data-have="${iid}" ${st.have[iid]?"checked":""} aria-label="${T("have")}: ${esc(nm(iid))}"><span></span></label></td><td><div class="shop-item">${img(iid)}<span>${esc(nm(iid))}${isPotion(iid)||!/^T\d_/.test(iid)?"":" "+badge(iid)}</span></div></td><td class="n">${fmt(e.need)}</td><td class="n">${fmt(e.p)}</td><td class="n">${st.have[iid]?"—":fmt(e.sum)}</td></tr>`).join("")}</tbody></table></div></div>`;
+  }).join("")}</div>`;
+  shopText = order.map(c=>{ const rows=Object.entries(shop[c]).filter(([iid])=>!st.have[iid]); return rows.length?c+":\n"+rows.map(([iid,e])=>`  ${nm(iid)} — ${T("txtQty")}: ${e.need} ${T("pcs")}, ${T("txtPrice")}: ~${fmt(e.p)} ${T("txtPer")}, ${T("txtSum")}: ${fmt(e.sum)}`).join("\n"):""; }).filter(Boolean).join("\n\n")+`\n\n${T("txtTotal")}: ${fmt(toBuy)}`;
+}
+$("#plan").addEventListener("click", e=>{ const d=e.target.dataset.del; if(d==null) return; curPlan().splice(+d,1); save(); renderPlan(); });
+$("#plan").addEventListener("change", e=>{
+  const t=e.target, plan=curPlan();
+  if(t.dataset.pq!=null){ plan[+t.dataset.pq].qty=Math.max(1,Math.round(+t.value||1)); }
+  else if(t.dataset.pc!=null){ plan[+t.dataset.pc].sellCity=t.value; }
+  else return;
+  save(); renderPlan();
+});
+$("#clearPlan").addEventListener("click", ()=>{ curPlan().length=0; save(); renderPlan(); });
+$("#shop").addEventListener("change", e=>{ const k=e.target.dataset.have; if(!k) return; if(e.target.checked) st.have[k]=true; else delete st.have[k]; save(); renderPlan(); });
+$("#shop").addEventListener("click", e=>{ if(e.target.id==="clearHave"){ st.have={}; save(); renderPlan(); } });
+$("#copyShop").addEventListener("click", ()=>{
+  const btn=$("#copyShop");
+  navigator.clipboard.writeText(shopText).then(()=>{ btn.textContent=T("copied"); setTimeout(()=>btn.textContent=T("copy"),1500); })
+    .catch(()=>{ const a=$("#copyArea"); a.hidden=false; a.value=shopText; a.select(); });
+});
+
+/* ---------- prices ---------- */
+function setStatus(msg, err){ const s=$("#status"); s.hidden=!msg; s.textContent=msg||""; s.classList.toggle("err",!!err); }
+function ago(ts){ const m=Math.round((Date.now()-new Date(ts))/60000); return m<1?T("justNow"):m<60?m+T("minAgo"):Math.round(m/60)+T("hAgo"); }
+function renderInfo(){
+  const d=new Date(pricesAt);
+  $("#dataInfo").textContent = (pricesLive ? T("updated")+ago(pricesAt) : T("snapshot")+d.toLocaleString(st.lang==="ru"?"ru-RU":"en-GB",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}))
+    + T("srv") + ({europe:"Europe",west:"Americas",east:"Asia"}[st.server]) + T("src");
+}
+$("#lang").addEventListener("change", e=>{ st.lang=e.target.value; save(); renderAll(); });
+$("#priceMode").addEventListener("change", e=>{ st.priceMode=e.target.value; save(); renderMain(); renderPlan(); });
+$("#server").addEventListener("change", e=>{ st.server=e.target.value; save(); renderInfo(); refreshPrices(); });
+$("#auto").addEventListener("change", e=>{ st.auto=+e.target.value; save(); scheduleAuto(); });
+
+function textOf(res){ if(typeof res?.payload==="string") return res.payload; const b=(res?.content||[]).find(x=>x.type==="text"); return b?b.text:(res?.payload!=null?JSON.stringify(res.payload):""); }
+function mcpMsg(e){
+  switch(e?.code){
+    case "server_not_connected": return T("onlyApp");
+    case "not_in_manifest": case "approval_required": return T("notAllowed");
+    case "cancelled": return T("cancelled");
+    case "tool_error": return T("browserFail")+(e.message||"").slice(0,160);
+    case "parse": return T("badFormat");
+    default: return T("genericFail");
+  }
+}
+async function fetchLocal(){
+  const r=await fetch("/api/prices?server="+encodeURIComponent(st.server)); const j=await r.json();
+  if(!r.ok) throw {local:true, message:j.error||("HTTP "+r.status)}; return j;
+}
+async function fetchViaClaude(){
+  const mcp=await claude.use("mcp"); if(!mcp) throw {code:"server_not_connected"};
+  const ids=Object.keys(DATA.items), prices={};
+  for(let i=0;i<ids.length;i+=110){
+    const url=`https://${st.server}.albion-online-data.com/api/v2/stats/prices/${ids.slice(i,i+110).join(",")}.json?locations=${encodeURIComponent(CITIES.join(","))}&qualities=1`;
+    const r1=await mcp.callTool("host:claude_browser","preview_start",{url},{cache:false});
+    const m=/tabId\s+([^\s\)]+)/.exec(textOf(r1));
+    const r2=await mcp.callTool("host:claude_browser","get_page_text", m?{tabId:m[1],max_chars:900000}:{max_chars:900000},{cache:false});
+    const t2=textOf(r2), a=t2.indexOf("["), b=t2.lastIndexOf("]"); if(a<0||b<a) throw {code:"parse"};
+    for(const x of JSON.parse(t2.slice(a,b+1))){
+      const e=(prices[x.item_id] ||= {})[x.city]={s:(x.sell_price_min>0&&x.sell_price_min<5e7)?x.sell_price_min:0};
+      const old=DATA.prices[x.item_id]?.[x.city]; if(old&&st.server==="europe"){ if(old.v!=null) e.v=old.v; if(old.a) e.a=old.a; }
+    }
+  }
+  return {at:new Date().toISOString(), prices};
+}
+let busy=false;
+async function refreshPrices(){
+  if(busy) return; busy=true; const btn=$("#refresh"); btn.disabled=true;
+  setStatus(LOCAL?T("loading"):T("loadingClaude"));
+  try{
+    const j = LOCAL ? await fetchLocal() : await fetchViaClaude();
+    PRICES=j.prices; pricesLive=true; pricesAt=j.at; setStatus(j.warning||"");
+    renderInfo(); renderMain(); renderPlan();
+  }catch(e){ setStatus(e?.local ? T("loadFail")+e.message+T("loadFail2") : mcpMsg(e), true); }
+  finally{ btn.disabled=false; busy=false; }
+}
+$("#refresh").addEventListener("click", refreshPrices);
+let autoTimer=null;
+function scheduleAuto(){ clearInterval(autoTimer); if(LOCAL&&st.auto>0) autoTimer=setInterval(refreshPrices, st.auto*60000); }
+setInterval(()=>{ if(pricesLive) renderInfo(); }, 30000);
+
+/* ---------- interface tour ---------- */
+const TOUR = [
+  {tab:"potion", ru:["Привет!","Это калькулятор крафта зелий и перекрафта ресурсов. Покажу главное за минуту — или нажми «Пропустить»."], en:["Hi!","This is a calculator for potion crafting and resource refining. Here's a one-minute tour — or press “Skip”."]},
+  {sel:"#tabs", tab:"potion", ru:["Две вкладки","«Зелья» — крафт зелий, «Перекрафт» — шкура в кожу, руда в слитки, волокно в ткань, дерево в доски, камень в блоки."], en:["Two tabs","“Potions” is potion crafting; “Refining” turns hide into leather, ore into bars, fiber into cloth, wood into planks and stone into blocks."]},
+  {sel:"#picker", tab:"potion", ru:["Выбор зелья","Нажми на зелье — справа сразу появится рецепт и расчёт. Есть поиск по названию, а кнопки .0–.3 переключают зачарование (например, 6.1 или 8.1)."], en:["Pick a potion","Click a potion and its recipe and numbers appear on the right. You can search by name; the .0–.3 buttons switch the enchantment (e.g. 6.1 or 8.1)."]},
+  {sel:"#setup", tab:"potion", ru:["Сколько и как крафтишь","Слева — количество, «Профильный город» и «Фокус», рядом процент возврата ресурсов. Справа — «Премиум» (налог с продажи 4% вместо 8%) и стоимость станка за 1 крафт: возьми из окна крафта в игре, на своём острове ставь 0."], en:["How much and how","On the left: amount, “Bonus city” and “Focus”, with the resource return. On the right: “Premium” (4% sales tax instead of 8%) and the station fee per craft: take it from the in-game craft window, 0 on your own island."]},
+  {sel:"#ingTable", tab:"potion", ru:["Что купить и где","«Купить» — сколько нужно с учётом возврата. В колонке «Город» написано, где сейчас дешевле всего: «Дешевле всего: Martlock». Можно выбрать другой город или вписать свою цену."], en:["What to buy and where","“Buy” is the amount after resource return. The “City” column says where it's cheapest right now, e.g. “Cheapest: Martlock”. Pick another city or type your own price."]},
+  {sel:"#results", tab:"potion", ru:["Итог","Сырьё, станок, себестоимость, выручка уже за вычетом налога и профит. Сырья берётся с небольшим запасом: вернувшиеся ресурсы крафти ещё раз, пока хватает."], en:["Result","Materials, station fee, cost, revenue with tax already taken off, and profit. Materials include a small margin: craft the returned resources again while they last."]},
+  {sel:"#sellRow", tab:"potion", ru:["Где продавать","Выбери город продажи. Ниже цены по всем городам: где дороже всего продать и где дешевле всего купить."], en:["Where to sell","Pick the city to sell in. Below are prices in every city: where it sells highest and where it's cheapest."]},
+  {sel:"#addPlan", tab:"potion", ru:["План крафта","Добавь расчёт в план. У зелий и перекрафта планы отдельные. В плане видно по каждому предмету: сколько продать, где, по какой цене и какой профит; количество и город можно менять прямо там."], en:["Craft plan","Add this to the plan. Potions and refining have separate plans. For each item the plan shows how many to sell, where, at what price and the profit; you can change the amount and city right there."]},
+  {sel:"#shopPanel", tab:"potion", ru:["Список закупки","Всё из плана, разложенное по городам. Переключатель «Есть» — у тебя это уже есть (например, вырастил на острове): строка не попадёт в сумму «Докупить» и в скопированный список."], en:["Shopping list","Everything in the plan, split by city. The “Have” switch means you already own it (say, grown on your island): it leaves the “Still to buy” total and the copied list."]},
+  {sel:"#picker", tab:"refine", ru:["Перекрафт","Выбери материал, тир и зачарование. У каждого материала свой профильный город — он указан под названием."], en:["Refining","Choose the material, tier and enchantment. Each material has its own bonus city, shown under its name."]},
+  {sel:"#setup", tab:"refine", ru:["Цепочка","«Предыдущий тир делать самому» — посчитать всю цепочку от T2, а не покупать кожу или слитки тиром ниже."], en:["Chain","“Make the previous tier myself” calculates the whole chain from T2 instead of buying the lower-tier refined item."]},
+  {sel:"#topControls", tab:null, ru:["Цены и настройки","Цены берутся с Albion Online Data Project и обновляются сами. Можно считать по средней за 7 дней или по текущей. Кнопка «Обучение» покажет эту подсказку снова."], en:["Prices and settings","Prices come from Albion Online Data Project and refresh on their own. Use the 7-day average or the current price. The “Tour” button shows this guide again."]}
+];
+let tourI=-1, tourTabBefore="potion";
+function tourPlace(){
+  const s=TOUR[tourI], spot=$("#tourSpot"), card=$("#tourCard");
+  const L=s[st.lang]||s.ru;
+  $("#tourStep").textContent=`${tourI+1} / ${TOUR.length}`; $("#tourTitle").textContent=L[0]; $("#tourText").textContent=L[1];
+  $("#tourSkip").textContent=T("tourSkip"); $("#tourBack").textContent=T("tourBack"); $("#tourBack").disabled=tourI===0;
+  $("#tourNext").textContent= tourI===TOUR.length-1 ? T("tourDone") : T("tourNext");
+  const el = s.sel ? document.querySelector(s.sel) : null;
+  const vw=innerWidth, vh=innerHeight, cw=Math.min(380,vw-32), ch=card.offsetHeight||180;
+  if(!el){ spot.className="tour-spot center"; spot.style.cssText=""; card.style.left=((vw-cw)/2)+"px"; card.style.top=Math.max(16,(vh-ch)/2)+"px"; return; }
+  const r=el.getBoundingClientRect(), pad=6;
+  spot.className="tour-spot";
+  const top=Math.max(4,r.top-pad), h=Math.min(r.height+pad*2, vh-top-4);
+  Object.assign(spot.style,{left:(r.left-pad)+"px",top:top+"px",width:(r.width+pad*2)+"px",height:h+"px"});
+  let y = r.bottom+14; if(y+ch>vh-12) y = r.top-ch-14; if(y<12) y = Math.min(vh-ch-12, Math.max(12, r.top+20));
+  let x = r.left; if(x+cw>vw-16) x=vw-cw-16; if(x<16) x=16;
+  card.style.left=x+"px"; card.style.top=y+"px";
+}
+function tourGo(i){
+  tourI=i; const s=TOUR[i];
+  if(s.tab && st.tab!==s.tab){ st.tab=s.tab; applyStatic(); renderPicker(); renderMain(); renderPlan(); }
+  const el = s.sel ? document.querySelector(s.sel) : null;
+  if(el){ const r=el.getBoundingClientRect(); if(r.top<60 || r.bottom>innerHeight-200) el.scrollIntoView({block:"center",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"}); }
+  tourPlace(); setTimeout(tourPlace, 380);
+  $("#tourNext").focus();
+}
+function tourStart(){ tourTabBefore=st.tab; $("#tour").hidden=false; tourGo(0); }
+function tourEnd(){
+  $("#tour").hidden=true; tourI=-1; st.tourDone=true;
+  if(st.tab!==tourTabBefore){ st.tab=tourTabBefore; applyStatic(); renderPicker(); renderMain(); renderPlan(); }
+  save(); $("#help").focus();
+}
+$("#help").addEventListener("click", tourStart);
+$("#tourSkip").addEventListener("click", tourEnd);
+$("#tourBack").addEventListener("click", ()=>{ if(tourI>0) tourGo(tourI-1); });
+$("#tourNext").addEventListener("click", ()=>{ if(tourI<TOUR.length-1) tourGo(tourI+1); else tourEnd(); });
+addEventListener("keydown", e=>{ if(tourI<0) return; if(e.key==="Escape") tourEnd(); else if(e.key==="ArrowRight") $("#tourNext").click(); else if(e.key==="ArrowLeft") $("#tourBack").click(); });
+addEventListener("resize", ()=>{ if(tourI>=0) tourPlace(); });
+addEventListener("scroll", ()=>{ if(tourI>=0) tourPlace(); }, {passive:true});
+
+async function boot(){
+  loadState(ls.get("kotel_state"));
+  if(LOCAL){
+    try{ const r=await fetch("/api/state"); if(r.ok){ const s=await r.json(); if(s && Object.keys(s).length) loadState(s); } }catch(e){}
+    const ping=()=>fetch("/api/ping",{cache:"no-store"}).catch(()=>{});
+    ping(); setInterval(ping, 5000);
+    window.addEventListener("pagehide", ()=>{ try{ navigator.sendBeacon("/api/bye"); }catch(e){} });
+  }
+  renderAll();
+  if(LOCAL){ scheduleAuto(); refreshPrices(); }
+  if(!st.tourDone) setTimeout(tourStart, 500);
+}
+boot();
+</script>

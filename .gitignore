@@ -1,0 +1,4 @@
+dist/
+*.exe
+setup/app.exe.gz
+app/index.html
