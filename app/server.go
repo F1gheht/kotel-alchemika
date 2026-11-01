@@ -26,7 +26,7 @@ var idsTxt string
 
 const (
 	appName    = "KotelAlchemika"
-	appVersion = "2.4.0"
+	appVersion = "2.6.0"
 	listenAddr = "127.0.0.1:47821"
 )
 
@@ -91,7 +91,7 @@ func getJSON(u string, v any) error {
 	req.Header.Set("Accept", "application/json")
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return err
+		return errors.New("нет связи с сайтом цен — проверь интернет")
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 429 {
@@ -322,6 +322,7 @@ func newMux(onFocus, onQuit func()) *http.ServeMux {
 			w.WriteHeader(405)
 		}
 	})
+	registerUpdateRoutes(mux, onQuit)
 	mux.HandleFunc("/api/icon/", serveIcon)
 	mux.HandleFunc("/api/prices", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")

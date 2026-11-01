@@ -215,3 +215,9 @@ func uninstall() {
 	}
 	messageBox(tr("«Котёл алхимика» удалён.", "Alchemist's Cauldron has been removed."), appTitle(), mbOK|mbIconInfo)
 }
+
+// runInstaller starts the downloaded installer in silent mode; it waits for this app to close, updates it and opens it again.
+func runInstaller(path string) error {
+	cmd := exec.Command(path, "--silent", "--launch")
+	return cmd.Start()
+}

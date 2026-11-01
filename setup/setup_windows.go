@@ -33,7 +33,7 @@ var pageHTML string
 
 const (
 	appName      = "KotelAlchemika"
-	appVersion   = "2.4.0"
+	appVersion   = "2.6.0"
 	exeName      = "KotelAlchemika.exe"
 	uninstallKey = `Software\Microsoft\Windows\CurrentVersion\Uninstall\` + appName
 	lnkRu        = "Котёл алхимика.lnk"
@@ -267,9 +267,43 @@ type status struct {
 	Msg   string `json:"msg"`
 }
 
+// silentUpdate is run by the app's built-in updater: no window, keeps the existing shortcuts and language.
+func silentUpdate(launchAfter bool) {
+	desktop := false
+	if p, e := windows.KnownFolderPath(windows.FOLDERID_Desktop, 0); e == nil {
+		for _, n := range []string{lnkRu, lnkEn} {
+			if _, err := os.Stat(filepath.Join(p, n)); err == nil {
+				desktop = true
+			}
+		}
+	}
+	// Give the app a moment to close; the installer also asks it to quit.
+	time.Sleep(1500 * time.Millisecond)
+	if _, err := install(options{Desktop: desktop, Lang: lang}); err != nil {
+		messageBox(tr("Не получилось обновить «Котёл алхимика»: ", "Could not update Alchemist's Cauldron: ")+err.Error(), tr("Обновление", "Update"), 0x10)
+		return
+	}
+	if launchAfter {
+		launch()
+	}
+}
+
 func main() {
 	if procDpiCtx.Find() == nil {
 		procDpiCtx.Call(^uintptr(3))
+	}
+	silent, launchAfter := false, false
+	for _, a := range os.Args[1:] {
+		switch a {
+		case "--silent":
+			silent = true
+		case "--launch":
+			launchAfter = true
+		}
+	}
+	if silent {
+		silentUpdate(launchAfter)
+		return
 	}
 	title := tr("Установка «Котёл алхимика»", "Alchemist's Cauldron Setup")
 	w := webview2.NewWithOptions(webview2.WebViewOptions{

@@ -4,6 +4,7 @@
 package main
 
 import (
+	"errors"
 	"net"
 	"net/http"
 	"os"
@@ -25,4 +26,8 @@ func main() {
 		exec.Command("xdg-open", "http://"+listenAddr+"/").Start()
 	}
 	watchBrowserTab()
+}
+
+func runInstaller(path string) error {
+	return errors.New("обновление работает только в Windows")
 }

@@ -27,6 +27,7 @@
   --good:#6fd39b; --good-soft:#1d3427; --bad:#f08a7a; --bad-soft:#3a201c; --warn:#e2c15a;
   --chip:#26312c; --cell:#202a26; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
 .wrap{max-width:1360px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px;display:flex;flex-direction:column;gap:14px}
 header.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 24px;justify-content:space-between}
@@ -70,6 +71,8 @@ button:disabled{opacity:.45;cursor:default}
 .seg.t{grid-template-columns:repeat(7,minmax(0,1fr))}
 .seg.e{grid-template-columns:repeat(5,minmax(0,1fr))}
 .seg.p{grid-template-columns:repeat(4,minmax(0,1fr))}
+.seg.r{grid-template-columns:repeat(2,minmax(0,1fr))}
+.seg.r button{font-family:var(--f-body);font-size:13px;padding:6px 4px}
 .seg button{padding:6px 0;font-family:var(--f-mono);font-size:13px;background:var(--chip);border-color:transparent}
 .tier{font-family:var(--f-mono);font-size:11px;font-weight:500;padding:1px 5px;border-radius:4px;color:#fff;background:var(--t4);white-space:nowrap}
 .tier.t2{background:var(--t2)}.tier.t3{background:var(--t3)}.tier.t4{background:var(--t4)}.tier.t5{background:var(--t5)}.tier.t6{background:var(--t6)}.tier.t7{background:var(--t7);color:#2a2306}.tier.t8{background:var(--t8);color:#1a1d1f}
@@ -170,6 +173,15 @@ tr.is-have .shop-item span{text-decoration:line-through}
 .sw input:checked+span::after{transform:translateX(14px)}
 .sw input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.sw span,.sw span::after{transition:none}}
+.ctl-chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);padding:8px 2px;cursor:pointer}
+.ctl-chk input{margin:0;width:16px;height:16px}
+.update{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;align-items:center;padding:12px 14px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent)}
+.update-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.update details{grid-column:1/-1;font-size:13px}
+.update summary{cursor:pointer;color:var(--muted)}
+.upd-notes{white-space:pre-wrap;margin-top:6px;max-height:200px;overflow:auto;font-size:13px}
+.update-btns{display:flex;gap:8px;grid-row:1;grid-column:2}
+@media (max-width:600px){.update{grid-template-columns:minmax(0,1fr)}.update-btns{grid-row:auto;grid-column:auto}}
 textarea#copyArea{width:100%;height:160px;margin-top:8px;font-family:var(--f-mono);font-size:12px}
 </style>
 
@@ -185,10 +197,16 @@ textarea#copyArea{width:100%;height:160px;margin-top:8px;font-family:var(--f-mon
       <label class="ctl" for="priceMode"><span data-t="price"></span><select id="priceMode"><option value="avg" data-t="avg"></option><option value="now" data-t="now"></option></select></label>
       <label class="ctl" for="auto" data-local hidden><span data-t="auto"></span><select id="auto"><option value="0" data-t="off"></option><option value="5" data-t="m5"></option><option value="10" data-t="m10"></option><option value="30" data-t="m30"></option></select></label>
       <button class="primary" id="refresh" data-t="refresh"></button>
+      <label class="ctl-chk" for="checkUpd" data-local hidden><input type="checkbox" id="checkUpd"><span data-t="checkUpd"></span></label>
       <button id="help" data-t="tour"></button>
     </div>
   </header>
   <div class="status" id="status" hidden></div>
+  <div class="update" id="updateBar" hidden role="status">
+    <div class="update-main"><b id="updTitle"></b><span class="sub" id="updSub"></span></div>
+    <details id="updNotesBox" hidden><summary data-t="updNotes"></summary><div class="upd-notes" id="updNotes"></div></details>
+    <div class="update-btns"><button id="updLater" data-t="updLater"></button><button class="primary" id="updGo" data-t="updGo"></button></div>
+  </div>
 
   <nav class="tabs" id="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-potion" data-tab="potion" data-t="tabPotions"></button>
@@ -225,7 +243,7 @@ textarea#copyArea{width:100%;height:160px;margin-top:8px;font-family:var(--f-mon
 
 <script>
 const DATA = /*__DATA__*/null;
-const APP_VERSION = "2.4.0";
+const APP_VERSION = "2.6.0";
 const CITIES = ["Brecilien","Bridgewatch","Martlock","Thetford","Fort Sterling","Lymhurst","Caerleon"];
 const FAMILY_ORDER = ["HEAL","ENERGY","REVIVE","STONESKIN","SLOWFIELD","COOLDOWN","CLEANSE","MOB_RESET","CLEANSE2","ACID","BERSERK","LAVA","GATHER","TORNADO","LIFEWARD"];
 const FAM = {
@@ -242,7 +260,7 @@ const RFAM = [
 ];
 const I18N = {
  ru:{title:"Котёл алхимика",lang:"Язык",server:"Сервер",price:"Цена",avg:"Средняя за 7 дней",now:"Текущая на рынке",auto:"Автообновление",off:"Выключено",m5:"Каждые 5 мин",m10:"Каждые 10 мин",m30:"Каждые 30 мин",refresh:"Обновить цены",
-   tabPotions:"Зелья",tabRefine:"Перекрафт",gCraft:"Крафт",planQty:"Нужно",toSell:"Продать, шт.",spent:"Сырьё и станок",chainShort:"цепочка от T2",daily:"Бонус дня",dailyNone:"Нет",dailyHintPotion:"если сегодня бонус на зелья",dailyHintRefine:"если сегодня бонус на этот материал",notIsland:"не на острове",gFees:"Налоги и станок",premium:"Премиум",salesTax:"налог с продажи",stationFee:"Станок за 1 крафт",stationHint:"серебро, как в окне крафта; свой остров — 0",stationTotal:"Станок",toBuy:"Докупить на",haveWorth:"уже есть на",afterTax:"после налога",profitHaveNote:"То, что уже есть, считается по рыночной цене: его можно было бы продать.",have:"Есть",clearHave:"Снять все «Есть»",tour:"Обучение",tourNext:"Далее",tourBack:"Назад",tourSkip:"Пропустить",tourDone:"Готово",version:"Версия",
+   tabPotions:"Зелья",tabRefine:"Перекрафт",checkUpd:"Проверять обновления",updAvail:"Доступна версия ",updYours:"у тебя ",updNotes:"Что нового",updGo:"Обновить",updLater:"Позже",updLoading:"Скачиваю обновление…",updRestart:"Устанавливаю обновление — приложение откроется заново через несколько секунд.",updFail:"Не получилось обновить: ",gCraft:"Крафт",retMode:"Сырьё",retWith:"С возвратом",retPlain:"Без возврата",retWithHint:"купить меньше: вернувшееся идёт в следующие крафты",retPlainHint:"купить на всё количество, возврат останется тебе",backValue:"Вернётся сырья на",backHint:"по рыночной цене, учтено в профите",planQty:"Нужно",toSell:"Продать, шт.",spent:"Сырьё и станок",chainShort:"цепочка от T2",daily:"Бонус дня",dailyNone:"Нет",dailyHintPotion:"если сегодня бонус на зелья",dailyHintRefine:"если сегодня бонус на этот материал",notIsland:"не на острове",gFees:"Налоги и станок",premium:"Премиум",salesTax:"налог с продажи",stationFee:"Станок за 1 крафт",stationHint:"серебро, как в окне крафта; свой остров — 0",stationTotal:"Станок",toBuy:"Докупить на",haveWorth:"уже есть на",afterTax:"после налога",profitHaveNote:"То, что уже есть, считается по рыночной цене: его можно было бы продать.",have:"Есть",clearHave:"Снять все «Есть»",tour:"Обучение",tourNext:"Далее",tourBack:"Назад",tourSkip:"Пропустить",tourDone:"Готово",version:"Версия",
    plan:"План крафта",clear:"Очистить",shop:"Список закупки",copy:"Копировать",copied:"Скопировано",search:"Найти зелье…",nothing:"Ничего не найдено",
    material:"Материал",tierL:"Тир",enchL:"Зачарование",profileShort:"бонус",
    perCraft:"шт. за крафт",add:"Добавить в план",qtyPotion:"Сколько зелий нужно",qtyRefine:"Сколько произвести",buyWhere:"Где покупать сырьё",cheapestCity:"В самом дешёвом городе",allIn:"Всё в: ",
@@ -261,7 +279,7 @@ const I18N = {
    cancelled:"Загрузка цен отменена.",browserFail:"Браузер не открыл сайт с ценами: ",genericFail:"Не удалось загрузить цены. Попробуй ещё раз чуть позже.",badFormat:"Сайт с ценами ответил в неожиданном формате. Показан снимок цен.",
    note:"Цены: Albion Online Data Project (собираются игроками, могут отставать на часы). Иконки: render.albiononline.com. Рецепты и названия: игровые файлы (ao-bin-dumps). Возврат ресурсов применяется ко всем ингредиентам, кроме редких алхимических (рога, когти, корни и т.п.) — они не возвращаются; количество к покупке рассчитано с запасом: возврат округляется вниз и крафтится заново в несколько заходов. Налог с продажи: 4% с премиумом или 8% без него, плюс 2,5% за выставление ордера. Налог станка — то, что указано за 1 крафт; при цепочке перекрафта он считается только для последнего тира. Фокус указан без учёта специализации: с прокачкой он меньше."},
  en:{title:"Alchemist's Cauldron",lang:"Language",server:"Server",price:"Price",avg:"7-day average",now:"Current market",auto:"Auto-refresh",off:"Off",m5:"Every 5 min",m10:"Every 10 min",m30:"Every 30 min",refresh:"Refresh prices",
-   tabPotions:"Potions",tabRefine:"Refining",gCraft:"Craft",planQty:"Wanted",toSell:"Sell, pcs",spent:"Materials and station",chainShort:"chain from T2",daily:"Daily bonus",dailyNone:"None",dailyHintPotion:"if potions have today's bonus",dailyHintRefine:"if this material has today's bonus",notIsland:"not on an island",gFees:"Taxes and station",premium:"Premium",salesTax:"sales tax",stationFee:"Station fee per craft",stationHint:"silver, as in the craft window; own island — 0",stationTotal:"Station",toBuy:"Still to buy",haveWorth:"already have",afterTax:"after tax",profitHaveNote:"Items you already have count at market price: you could sell them instead.",have:"Have",clearHave:"Clear all “Have”",tour:"Tour",tourNext:"Next",tourBack:"Back",tourSkip:"Skip",tourDone:"Done",version:"Version",
+   tabPotions:"Potions",tabRefine:"Refining",checkUpd:"Check for updates",updAvail:"Version available: ",updYours:"you have ",updNotes:"What's new",updGo:"Update",updLater:"Later",updLoading:"Downloading the update…",updRestart:"Installing the update — the app will reopen in a few seconds.",updFail:"Could not update: ",gCraft:"Craft",retMode:"Materials",retWith:"With return",retPlain:"No return",retWithHint:"buy less: returns go into the next crafts",retPlainHint:"buy for the full amount, returns stay with you",backValue:"Returned materials",backHint:"at market price, counted in profit",planQty:"Wanted",toSell:"Sell, pcs",spent:"Materials and station",chainShort:"chain from T2",daily:"Daily bonus",dailyNone:"None",dailyHintPotion:"if potions have today's bonus",dailyHintRefine:"if this material has today's bonus",notIsland:"not on an island",gFees:"Taxes and station",premium:"Premium",salesTax:"sales tax",stationFee:"Station fee per craft",stationHint:"silver, as in the craft window; own island — 0",stationTotal:"Station",toBuy:"Still to buy",haveWorth:"already have",afterTax:"after tax",profitHaveNote:"Items you already have count at market price: you could sell them instead.",have:"Have",clearHave:"Clear all “Have”",tour:"Tour",tourNext:"Next",tourBack:"Back",tourSkip:"Skip",tourDone:"Done",version:"Version",
    plan:"Craft plan",clear:"Clear",shop:"Shopping list",copy:"Copy",copied:"Copied",search:"Find a potion…",nothing:"Nothing found",
    material:"Material",tierL:"Tier",enchL:"Enchantment",profileShort:"bonus",
    perCraft:"per craft",add:"Add to plan",qtyPotion:"Potions needed",qtyRefine:"Amount to make",buyWhere:"Where to buy materials",cheapestCity:"Cheapest city",allIn:"All in: ",
@@ -281,7 +299,7 @@ const I18N = {
    note:"Prices: Albion Online Data Project (crowd-sourced, can lag by hours). Icons: render.albiononline.com. Recipes and names: game files (ao-bin-dumps). Resource return applies to all ingredients except rare alchemy ones (horns, claws, roots and so on), which are never returned; amounts to buy include a margin: returns are rounded down and crafted again over several rounds. Sales tax: 4% with premium or 8% without, plus 2.5% to place a sell order. Station fee is what you enter per craft; in a refining chain it applies to the final tier only. Focus is shown without specialization; leveling lowers it."}
 };
 
-const DEFAULTS = { lang:"ru", tab:"potion", tourDone:false, premium:true, station:{}, have:{}, server:"europe", priceMode:"avg", auto:10, buyMode:"auto", over:{}, cityPick:{},
+const DEFAULTS = { lang:"ru", tab:"potion", tourDone:false, checkUpdates:true, premium:true, station:{}, have:{}, server:"europe", priceMode:"avg", auto:10, buyMode:"auto", over:{}, cityPick:{},
   potion:{ sel:"T8_POTION_LAVA", ench:0, qty:120, sellCity:"Brecilien", cityBonus:true, focus:false },
   refine:{ fam:"LEATHER", tier:5, ench:0, qty:500, sellCity:"Martlock", cityBonus:true, focus:false, chain:false },
   plans:{ potion:[{id:"T8_POTION_LAVA",qty:120,sellCity:"Brecilien"},{id:"T5_POTION_MOB_RESET",qty:150,sellCity:"Brecilien"},{id:"T7_POTION_REVIVE",qty:100,sellCity:"Martlock"},{id:"T6_POTION_LAVA",qty:100,sellCity:"Brecilien"},{id:"T5_POTION_CLEANSE2",qty:50,sellCity:"Brecilien"}], refine:[] } };
@@ -372,14 +390,18 @@ function calc(id, qty, chain){
   const r = DATA.recipes[id], rrr = rrrFor(id);
   const crafts = Math.max(1, Math.ceil(qty / r.n)), made = crafts * r.n;
   const lines=[], madeLines=[]; let focus = (r.focus||0)*crafts;
-  const pb = planBuy(r.ing, crafts, rrr, r.nr||[]);
+  // "plain" mode buys the full recipe for every craft; returned resources stay with you as extra materials.
+  const plain = !!cfg(id).plain, nr = r.nr||[];
+  const pb = plain ? {buy:Object.fromEntries(Object.entries(r.ing).map(([i,q])=>[i,q*crafts])), rounds:[crafts]} : planBuy(r.ing, crafts, rrr, nr);
+  let back = 0;
   for(const [iid,q] of Object.entries(r.ing)){
     const need = pb.buy[iid];
+    if(plain && !nr.includes(iid)) back += Math.floor(q*crafts*rrr)*unitPrice(iid);
     if(chain && !isPotion(id) && DATA.recipes[iid]){
       const sub = calc(iid, need, chain);
       madeLines.push({iid, need, per:q, cost:sub.cost}, ...sub.madeLines);
       for(const l of sub.lines) lines.push(l);
-      focus += sub.focus;
+      focus += sub.focus; back += sub.back;
     } else {
       const p=unitPrice(iid); lines.push({iid, per:q, need, gross:q*crafts, city:buyCity(iid), p, sum:need*p, missing:!p});
     }
@@ -388,7 +410,7 @@ function calc(id, qty, chain){
   const merged={}; for(const l of lines){ const m=merged[l.iid]; if(m){ m.need+=l.need; m.gross+=l.gross; m.sum+=l.sum; } else merged[l.iid]={...l}; }
   const out=Object.values(merged), cost=out.reduce((a,l)=>a+l.sum,0);
   const station=(st.station[id]||0)*crafts;
-  return {crafts, made, rounds:pb.rounds, lines:out, madeLines, cost, station, perUnit:(cost+station)/made, focus, missing:out.some(l=>l.missing)};
+  return {crafts, made, rounds:pb.rounds, lines:out, madeLines, cost, station, back, perUnit:(cost+station-back)/made, focus, missing:out.some(l=>l.missing)};
 }
 const curId = () => st.tab==="potion" ? baseOf(st.potion.sel)+(st.potion.ench?"@"+st.potion.ench:"") : refineId(st.refine.fam, st.refine.tier, Math.min(st.refine.ench, maxEnch(st.refine.fam, st.refine.tier)));
 
@@ -397,11 +419,12 @@ function applyStatic(){
   document.title = T("title"); $("#title").textContent = T("title");
   document.querySelectorAll("[data-t]").forEach(el=>el.textContent=T(el.dataset.t));
   $("#note").textContent = T("note"); $("#ver").textContent = T("version")+" "+APP_VERSION;
+  $("#checkUpd").checked=st.checkUpdates!==false;
   $("#lang").value=st.lang; $("#server").value=st.server; $("#priceMode").value=st.priceMode; $("#auto").value=String(st.auto);
   document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===st.tab)));
   if(LOCAL) document.querySelectorAll("[data-local]").forEach(el=>el.hidden=false);
 }
-function renderAll(){ applyStatic(); renderInfo(); renderPicker(); renderMain(); renderPlan(); }
+function renderAll(){ applyStatic(); renderInfo(); renderPicker(); renderMain(); renderPlan(); if(typeof renderUpdate==="function") renderUpdate(); }
 document.querySelector(".tabs").addEventListener("click", e=>{ const b=e.target.closest(".tab"); if(!b) return; st.tab=b.dataset.tab; save(); applyStatic(); renderPicker(); renderMain(); renderPlan(); });
 
 /* ---------- picker ---------- */
@@ -461,7 +484,7 @@ function renderMain(){
   const id=curId(), r=DATA.recipes[id], c0=cfg(id), pot=isPotion(id), chain=!pot&&c0.chain;
   if(!r){ $("#main").innerHTML=`<div class="empty">${T("nothing")}</div>`; return; }
   const c=calc(id, c0.qty, chain);
-  const sp=sellPrice(id, c0.sellCity), revenue=c.made*sp*(1-feeRate()), spent=c.cost+c.station, profit=revenue-spent, margin=spent?profit/spent*100:0;
+  const sp=sellPrice(id, c0.sellCity), revenue=c.made*sp*(1-feeRate()), spent=c.cost+c.station-c.back, profit=revenue-spent, margin=spent?profit/spent*100:0;
   const vol=PRICES[id]?.[c0.sellCity]?.v;
   const chips=CITIES.map(cc=>({cc,p:cityPrice(id,cc),v:PRICES[id]?.[cc]?.v})).filter(x=>x.p);
   const bestP=Math.max(0,...chips.map(x=>x.p)), lowP=Math.min(...chips.map(x=>x.p)); const okProfit = sp && !c.missing;
@@ -483,6 +506,7 @@ function renderMain(){
     <label class="cell" for="buyMode"><span class="k">${T("buyWhere")}</span><select id="buyMode"><option value="auto" ${st.buyMode==="auto"?"selected":""}>${T("cheapestCity")}</option>${CITIES.map(cc=>`<option value="${cc}" ${st.buyMode===cc?"selected":""}>${T("allIn")}${cc}</option>`).join("")}</select></label>
     <label class="cell chk" for="cityBonus"><input type="checkbox" id="cityBonus" ${c0.cityBonus?"checked":""}><span>${bonusLabel}</span></label>
     <label class="cell chk" for="focus"><input type="checkbox" id="focus" ${c0.focus?"checked":""}>${T("focus")}</label>
+    <div class="cell"><span class="k">${T("retMode")}</span><div class="seg r"><button data-ret="with" aria-pressed="${!c0.plain}">${T("retWith")}</button><button data-ret="plain" aria-pressed="${!!c0.plain}">${T("retPlain")}</button></div><small class="alt">${c0.plain?T("retPlainHint"):T("retWithHint")}</small></div>
     <label class="cell" for="daily"><span class="k">${T("daily")}</span><select id="daily">${[["0",T("dailyNone")],["0.1","+10%"],["0.2","+20%"]].map(([v,l])=>`<option value="${v}" ${String(+c0.daily||0)===v?"selected":""}>${l}</option>`).join("")}</select><small class="alt">${pot?T("dailyHintPotion"):T("dailyHintRefine")}</small></label>
     ${hasPrev?`<label class="cell chk" for="chain"><input type="checkbox" id="chain" ${c0.chain?"checked":""}><span>${T("chain")}<small>${T("chainHint")}</small></span></label>`:""}
     <div class="cell"><span class="k">${T("rrr")}</span><span class="v">${pct(rrrFor(id))}</span></div>
@@ -508,6 +532,7 @@ function renderMain(){
     <div class="cell"><span class="k">${T("crafts")}</span><span class="v">${fmt(c.crafts)} → ${fmt(c.made)} ${T("pcs")}</span></div>
     <div class="cell"><span class="k">${T("matTotal")}</span><span class="v">${fmt(c.cost)}</span></div>
     <div class="cell"><span class="k">${T("stationTotal")}</span><span class="v">${fmt(c.station)}</span></div>
+    ${c0.plain?`<div class="cell"><span class="k">${T("backValue")}</span><span class="v">${fmt(c.back)}</span><small class="alt">${T("backHint")}</small></div>`:""}
     <div class="cell"><span class="k">${T("perUnit")}</span><span class="v">${fmt(c.perUnit)}</span></div>
     <div class="cell"><span class="k">${T("revenue")} ${feePct()}</span><span class="v">${sp?fmt(revenue):"—"}</span></div>
     <div class="cell profit ${okProfit?(profit>=0?"pos":"neg"):""}"><span class="k">${T("profit")}</span><span class="v">${okProfit?(profit>=0?"+":"")+fmt(profit)+" ("+margin.toFixed(0)+"%)":"—"}</span></div>
@@ -539,6 +564,8 @@ $("#main").addEventListener("change", e=>{
   save(); renderMain(); renderPlan();
 });
 $("#main").addEventListener("click", e=>{
+  const rb=e.target.closest("[data-ret]");
+  if(rb){ cfg(curId()).plain = rb.dataset.ret==="plain"; save(); renderMain(); renderPlan(); return; }
   if(e.target.id==="addPlan"){
     const id=curId(), c0=cfg(id), chain=!isPotion(id)&&!!c0.chain;
     const plan=curPlan(), ex=plan.find(p=>p.id===id);
@@ -558,8 +585,8 @@ function renderPlan(){
   if(!plan.length){ $("#plan").innerHTML=`<div class="empty">${T("planEmpty")}</div>`; $("#shop").innerHTML=`<div class="empty">${T("shopEmpty")}</div>`; shopText=""; return; }
   let tCost=0, tRev=0, tStation=0, ok=true; const shop={};
   const rows = plan.map((p,i)=>{
-    const c=calc(p.id,p.qty,!!p.chain), city=p.sellCity||"Brecilien", sp=sellPrice(p.id,city), rev=c.made*sp*(1-feeRate()), spent=c.cost+c.station, pr=rev-spent;
-    tCost+=c.cost; tStation+=c.station; tRev+=rev; if(!sp||c.missing) ok=false;
+    const c=calc(p.id,p.qty,!!p.chain), city=p.sellCity||"Brecilien", sp=sellPrice(p.id,city), rev=c.made*sp*(1-feeRate()), spent=c.cost+c.station-c.back, pr=rev-spent;
+    tCost+=c.cost-c.back; tStation+=c.station; tRev+=rev; if(!sp||c.missing) ok=false;
     for(const l of c.lines){ const e=((shop[l.city] ||= {})[l.iid] ||= {need:0,sum:0,p:l.p}); e.need+=l.need; e.sum+=l.sum; }
     return `<tr>
       <td><div class="ing">${img(p.id)}<div class="nm">${esc(nm(p.id))} ${badge(p.id)}${p.chain?`<div class="alt">${T("chainShort")}</div>`:""}</div></div></td>
@@ -724,6 +751,32 @@ addEventListener("keydown", e=>{ if(tourI<0) return; if(e.key==="Escape") tourEn
 addEventListener("resize", ()=>{ if(tourI>=0) tourPlace(); });
 addEventListener("scroll", ()=>{ if(tourI>=0) tourPlace(); }, {passive:true});
 
+/* ---------- updates (desktop app only) ---------- */
+let updInfo=null, updHidden=false;
+function renderUpdate(){
+  const bar=$("#updateBar");
+  if(!updInfo || !updInfo.newer || updHidden || st.checkUpdates===false){ bar.hidden=true; return; }
+  bar.hidden=false;
+  $("#updTitle").textContent=T("updAvail")+updInfo.latest;
+  $("#updSub").textContent=T("updYours")+updInfo.current;
+  const notes=(updInfo.notes||"").trim();
+  $("#updNotesBox").hidden=!notes; $("#updNotes").textContent=notes;
+}
+async function checkForUpdate(){
+  if(!LOCAL || st.checkUpdates===false) return;
+  try{ const r=await fetch("/api/update/check"); if(r.ok){ updInfo=await r.json(); renderUpdate(); } }catch(e){}
+}
+$("#updLater").addEventListener("click", ()=>{ updHidden=true; renderUpdate(); });
+$("#updGo").addEventListener("click", async ()=>{
+  const go=$("#updGo"); go.disabled=true; $("#updLater").disabled=true; setStatus(T("updLoading"));
+  try{
+    const r=await fetch("/api/update/install",{method:"POST"}); const j=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(j.error||("HTTP "+r.status));
+    setStatus(T("updRestart"));
+  }catch(e){ setStatus(T("updFail")+e.message, true); go.disabled=false; $("#updLater").disabled=false; }
+});
+$("#checkUpd").addEventListener("change", e=>{ st.checkUpdates=e.target.checked; save(); if(st.checkUpdates) checkForUpdate(); else renderUpdate(); });
+
 async function boot(){
   loadState(ls.get("kotel_state"));
   if(LOCAL){
@@ -732,8 +785,8 @@ async function boot(){
     ping(); setInterval(ping, 5000);
     window.addEventListener("pagehide", ()=>{ try{ navigator.sendBeacon("/api/bye"); }catch(e){} });
   }
-  renderAll();
-  if(LOCAL){ scheduleAuto(); refreshPrices(); }
+  renderAll(); renderUpdate();
+  if(LOCAL){ scheduleAuto(); refreshPrices(); setTimeout(checkForUpdate, 3000); setInterval(checkForUpdate, 6*3600*1000); }
   if(!st.tourDone) setTimeout(tourStart, 500);
 }
 boot();
