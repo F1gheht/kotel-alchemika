@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -83,7 +84,13 @@ func main() {
 		os.Remove(exe + ".old") // left over from an update
 	}
 
+	afterUpdate := len(os.Args) > 1 && os.Args[1] == "--after-update"
 	ln, err := net.Listen("tcp", listenAddr)
+	// Right after an update the old copy may still be closing: wait for the port instead of giving up.
+	for i := 0; err != nil && afterUpdate && i < 30; i++ {
+		time.Sleep(500 * time.Millisecond)
+		ln, err = net.Listen("tcp", listenAddr)
+	}
 	if err != nil {
 		// Already running: bring that window to the front and leave.
 		c := http.Client{Timeout: 2 * time.Second}
@@ -131,17 +138,25 @@ func main() {
 		}
 	}
 
-	w = webview2.NewWithOptions(webview2.WebViewOptions{
-		AutoFocus: true,
-		DataPath:  filepath.Join(dataDir, "WebView2"),
-		WindowOptions: webview2.WindowOptions{
-			Title:  appTitle(),
-			Width:  width,
-			Height: height,
-			IconId: 1,
-			Center: true,
-		},
-	})
+	newWindow := func() webview2.WebView {
+		return webview2.NewWithOptions(webview2.WebViewOptions{
+			AutoFocus: true,
+			DataPath:  filepath.Join(dataDir, "WebView2"),
+			WindowOptions: webview2.WindowOptions{
+				Title:  appTitle(),
+				Width:  width,
+				Height: height,
+				IconId: 1,
+				Center: true,
+			},
+		})
+	}
+	w = newWindow()
+	// After an update the old browser engine can hold its folder for a few seconds.
+	for i := 0; w == nil && afterUpdate && i < 8; i++ {
+		time.Sleep(time.Second)
+		w = newWindow()
+	}
 	if w == nil {
 		// WebView2 runtime missing: offer the browser instead of failing.
 		r := messageBox(tr(
@@ -163,7 +178,11 @@ func main() {
 		}
 	}
 	w.SetSize(int(900*dpi/96), int(600*dpi/96), webview2.HintMin)
-	w.Navigate("http://" + listenAddr + "/")
+	if afterUpdate {
+		w.Navigate("http://" + listenAddr + "/?updated=" + appVersion)
+	} else {
+		w.Navigate("http://" + listenAddr + "/")
+	}
 	w.Run() // returns when the window is closed
 }
 
@@ -218,7 +237,8 @@ func uninstall() {
 
 // runInstaller starts the downloaded installer in silent mode; it waits for this app to close, updates it and opens it again.
 func runInstaller(path string) error {
-	cmd := exec.Command(path, "--silent", "--launch")
+	// The installer waits for this process to exit, updates the app and starts it again.
+	cmd := exec.Command(path, "--silent", "--launch", "--wait-pid", strconv.Itoa(os.Getpid()))
 	return cmd.Start()
 }
 

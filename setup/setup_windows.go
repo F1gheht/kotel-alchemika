@@ -11,10 +11,12 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -33,7 +35,7 @@ var pageHTML string
 
 const (
 	appName      = "KotelAlchemika"
-	appVersion   = "2.7.0"
+	appVersion   = "2.7.1"
 	exeName      = "KotelAlchemika.exe"
 	uninstallKey = `Software\Microsoft\Windows\CurrentVersion\Uninstall\` + appName
 	lnkRu        = "Котёл алхимика.lnk"
@@ -260,6 +262,37 @@ func launch() {
 	exec.Command(targetExe()).Start()
 }
 
+// relaunch starts the updated app; the flag tells it to wait for the old copy to finish closing.
+func relaunch() {
+	exec.Command(targetExe(), "--after-update").Start()
+}
+
+// waitForExit waits up to 20 seconds for the old app process to end.
+func waitForExit(pid int) {
+	if pid <= 0 {
+		return
+	}
+	const synchronize = 0x00100000
+	h, err := windows.OpenProcess(synchronize, false, uint32(pid))
+	if err != nil {
+		return // already gone
+	}
+	defer windows.CloseHandle(h)
+	windows.WaitForSingleObject(h, 20000)
+}
+
+// waitPortFree waits until nothing listens on the app's address (the old copy has let it go).
+func waitPortFree() {
+	for i := 0; i < 40; i++ {
+		c, err := net.DialTimeout("tcp", "127.0.0.1:47821", 300*time.Millisecond)
+		if err != nil {
+			return
+		}
+		c.Close()
+		time.Sleep(500 * time.Millisecond)
+	}
+}
+
 /* ---------- UI ---------- */
 
 type status struct {
@@ -268,7 +301,7 @@ type status struct {
 }
 
 // silentUpdate is run by the app's built-in updater: no window, keeps the existing shortcuts and language.
-func silentUpdate(launchAfter bool) {
+func silentUpdate(launchAfter bool, waitPid int) {
 	desktop := false
 	if p, e := windows.KnownFolderPath(windows.FOLDERID_Desktop, 0); e == nil {
 		for _, n := range []string{lnkRu, lnkEn} {
@@ -277,14 +310,16 @@ func silentUpdate(launchAfter bool) {
 			}
 		}
 	}
-	// Give the app a moment to close; the installer also asks it to quit.
-	time.Sleep(1500 * time.Millisecond)
+	// Let the old app close completely before replacing it.
+	waitForExit(waitPid)
+	waitPortFree()
 	if _, err := install(options{Desktop: desktop, Lang: lang}); err != nil {
 		messageBox(tr("Не получилось обновить «Котёл алхимика»: ", "Could not update Alchemist's Cauldron: ")+err.Error(), tr("Обновление", "Update"), 0x10)
 		return
 	}
 	if launchAfter {
-		launch()
+		waitPortFree()
+		relaunch()
 	}
 }
 
@@ -292,17 +327,21 @@ func main() {
 	if procDpiCtx.Find() == nil {
 		procDpiCtx.Call(^uintptr(3))
 	}
-	silent, launchAfter := false, false
-	for _, a := range os.Args[1:] {
+	silent, launchAfter, waitPid := false, false, 0
+	for i, a := range os.Args[1:] {
 		switch a {
 		case "--silent":
 			silent = true
 		case "--launch":
 			launchAfter = true
+		case "--wait-pid":
+			if i+2 < len(os.Args) {
+				waitPid, _ = strconv.Atoi(os.Args[i+2])
+			}
 		}
 	}
 	if silent {
-		silentUpdate(launchAfter)
+		silentUpdate(launchAfter, waitPid)
 		return
 	}
 	title := tr("Установка «Котёл алхимика»", "Alchemist's Cauldron Setup")
