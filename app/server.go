@@ -26,7 +26,7 @@ var idsTxt string
 
 const (
 	appName    = "KotelAlchemika"
-	appVersion = "2.8.1"
+	appVersion = "2.8.21"
 	listenAddr = "127.0.0.1:47821"
 )
 

@@ -35,7 +35,7 @@ var pageHTML string
 
 const (
 	appName      = "KotelAlchemika"
-	appVersion   = "2.8.1"
+	appVersion   = "2.8.21"
 	exeName      = "KotelAlchemika.exe"
 	uninstallKey = `Software\Microsoft\Windows\CurrentVersion\Uninstall\` + appName
 	lnkRu        = "Котёл алхимика.lnk"
