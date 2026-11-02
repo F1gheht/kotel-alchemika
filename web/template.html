@@ -122,6 +122,7 @@ td input.price{width:100px;text-align:right}
 .cc-name{font-size:13px;font-weight:500;white-space:nowrap}
 .cc-tag{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--good);background:var(--good-soft);padding:1px 6px;border-radius:999px;white-space:nowrap}
 .cc-price{font-size:17px;font-weight:500}
+.th-sub{display:block;font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;opacity:.75}
 .cc-net{font-size:11px}
 .city-cell.best{border-color:var(--good)}
 .tag{font-size:10px;text-transform:uppercase;letter-spacing:.05em}.tag.best{color:var(--good)}.tag.low{color:var(--accent)}
@@ -304,7 +305,7 @@ textarea#copyArea{width:100%;height:160px;margin-top:8px;font-family:var(--f-mon
 
 <script>
 const DATA = /*__DATA__*/null;
-const APP_VERSION = "2.8.22";
+const APP_VERSION = "2.8.23";
 const CITIES = ["Brecilien","Bridgewatch","Martlock","Thetford","Fort Sterling","Lymhurst","Caerleon"];
 const FAMILY_ORDER = ["HEAL","ENERGY","REVIVE","STONESKIN","SLOWFIELD","COOLDOWN","CLEANSE","MOB_RESET","CLEANSE2","ACID","BERSERK","LAVA","GATHER","TORNADO","LIFEWARD"];
 const FAM = {
@@ -328,7 +329,7 @@ const I18N = {
    cityBonus:"Профильный город",focus:"Фокус",rrr:"Возврат ресурсов",chain:"Предыдущий тир делать самому",chainHint:"иначе он покупается",focusCost:"Фокус на всё",
    ing:"Ингредиент",per:"За крафт",buy:"Купить",city:"Город",unit:"Цена за шт.",sum:"Сумма",cheapestOpt:"Дешевле всего",asAbove:"Как выбрано выше",pricesByCity:"Цена продажи ордером по городам",cheapTag:"дешевле всего",dearTag:"дороже всего",noData:"нет данных",noReturn:"Без возврата: ",
    madeHere:"Делаешь сам",intermediate:"Промежуточные (делаешь сам)",
-   crafts:"Крафтов",pcs:"шт.",matTotal:"Сырьё всего",perUnit:"Себестоимость 1 шт.",revenue:"Выручка после налога",profit:"Профит",
+   crafts:"Крафтов",pcs:"шт.",inclFee:"с 2,5% за ордер",feeInside:"в т.ч. 2,5% за ордера:",matTotal:"Сырьё всего",perUnit:"Себестоимость 1 шт.",revenue:"Выручка после налога",profit:"Профит",
    sellIn:"Продавать в",sellPrice:"Цена продажи",volume:"Продаётся в день",perDay:"/день",resetOver:"Сбросить ручные цены",noPrices:"Нет цен по этому предмету. Нажми «Обновить цены» или впиши цену вручную.",
    planEmpty:"Пусто. Выбери предмет, укажи количество и нажми «Добавить в план».",shopEmpty:"Появится, когда в плане будет хотя бы один предмет.",
    invest:"Вложение",item:"Предмет",count:"Кол-во, шт.",total:"итого",materials:"сырьё",noPrice:"нет цены",remove:"Убрать из плана",
@@ -347,7 +348,7 @@ const I18N = {
    cityBonus:"Bonus city",focus:"Focus",rrr:"Resource return",chain:"Make the previous tier myself",chainHint:"otherwise it is bought",focusCost:"Focus for all",
    ing:"Ingredient",per:"Per craft",buy:"Buy",city:"City",unit:"Unit price",sum:"Total",cheapestOpt:"Cheapest",asAbove:"As set above",pricesByCity:"Sell-order price by city",cheapTag:"cheapest",dearTag:"highest",noData:"no data",noReturn:"Without return: ",
    madeHere:"You make it",intermediate:"Intermediate (you make them)",
-   crafts:"Crafts",pcs:"pcs",matTotal:"Materials total",perUnit:"Cost per unit",revenue:"Revenue after tax",profit:"Profit",
+   crafts:"Crafts",pcs:"pcs",inclFee:"incl. 2.5% order fee",feeInside:"incl. 2.5% order fees:",matTotal:"Materials total",perUnit:"Cost per unit",revenue:"Revenue after tax",profit:"Profit",
    sellIn:"Sell in",sellPrice:"Sell price",volume:"Sold per day",perDay:"/day",resetOver:"Reset manual prices",noPrices:"No prices for this item. Press “Refresh prices” or type a price manually.",
    planEmpty:"Empty. Pick an item, set the amount and press “Add to plan”.",shopEmpty:"Appears once the plan has at least one item.",
    invest:"Investment",item:"Item",count:"Qty",total:"total",materials:"materials",noPrice:"no price",remove:"Remove from plan",
@@ -608,21 +609,20 @@ function renderMain(){
     <small class="alt buyhint">${st.buyVia==="order"?T("buyOrderHint"):T("buyMarketHint")}</small>
   </div>
   <div class="tbl" id="ingTable"><table>
-    <thead><tr><th>${T("ing")}</th><th class="n">${T("per")}</th><th class="n">${T("buy")}</th><th>${T("city")}</th><th class="n">${st.buyVia==="order"?T("orderPriceL"):T("unit")}</th><th class="n">${T("sum")}</th></tr></thead>
+    <thead><tr><th>${T("ing")}</th><th class="n">${T("per")}</th><th class="n">${T("buy")}</th><th>${T("city")}</th><th class="n">${st.buyVia==="order"?T("orderPriceL"):T("unit")}</th><th class="n">${T("sum")}${buyFeeRate()?`<small class="th-sub">${T("inclFee")}</small>`:""}</th></tr></thead>
     <tbody>${c.lines.map(l=>`<tr>
       <td><div class="ing">${img(l.iid)}<div><div class="nm">${esc(nm(l.iid))} ${isPotion(id)?"":badge(l.iid)}</div><div class="alt">${esc(alt(l.iid))}</div></div></div></td>
       <td class="n">${chain?"—":l.per}</td>
       <td class="n" title="${T("noReturn")}${fmt(l.gross)}">${fmt(l.need)}</td>
       <td><select data-city="${l.iid}" aria-label="${T("city")}">${cityOptions(st.cityPick[l.iid]||"", l.iid, true)}</select></td>
       <td class="n"><input class="price ${(st.buyVia==="order"?st.orderOver[l.iid]:st.over[l.iid])!=null?"edited":""}" type="number" min="0" data-price="${l.iid}" value="${l.p||""}" placeholder="${T("noData")}" aria-label="${st.buyVia==="order"?T("orderPriceL"):T("unit")}" title="${st.buyVia==="order"?T("topOrderL")+" "+fmt(topOrder(l.iid)):""}"></td>
-      <td class="n">${l.missing?"—":fmt(l.sum)}</td></tr>`).join("")}</tbody></table></div>
+      <td class="n">${l.missing?"—":fmt(l.sum*(1+buyFeeRate()))}</td></tr>`).join("")}</tbody></table></div>
   ${c.madeLines.length?`<div class="subhead">${T("intermediate")}</div><div class="tbl"><table><thead><tr><th>${T("item")}</th><th class="n">${T("count")}</th><th class="n">${T("matTotal")}</th></tr></thead><tbody>${
     c.madeLines.map(m=>`<tr class="made"><td><div class="ing">${img(m.iid)}<div class="nm">${esc(nm(m.iid))} ${badge(m.iid)}</div></div></td><td class="n">${fmt(m.need)}</td><td class="n">${fmt(m.cost)}</td></tr>`).join("")}</tbody></table></div>`:""}
   <div class="cells" id="results">
     <div class="cell"><span class="k">${T("crafts")}</span><span class="v">${fmt(c.crafts)} → ${fmt(c.made)} ${T("pcs")}</span></div>
-    <div class="cell"><span class="k">${T("matTotal")}</span><span class="v">${fmt(c.cost)}</span></div>
+    <div class="cell"><span class="k">${T("matTotal")}</span><span class="v">${fmt(c.cost+c.buyFee)}</span>${c.buyFee?`<small class="alt">${T("feeInside")} ${fmt(c.buyFee)}</small>`:""}</div>
     <div class="cell"><span class="k">${T("stationTotal")}</span><span class="v">${fmt(c.station)}</span></div>
-    ${c.buyFee?`<div class="cell"><span class="k">${T("buyFeeL")}</span><span class="v">${fmt(c.buyFee)}</span></div>`:""}
 
     ${c0.plain?`<div class="cell"><span class="k">${T("backValue")}</span><span class="v">${fmt(c.back)}</span><small class="alt">${T("backHint")}</small></div>`:""}
     <div class="cell"><span class="k">${T("perUnit")}</span><span class="v">${fmt(c.perUnit)}</span></div>
@@ -686,7 +686,7 @@ function renderPlan(){
   const rows = plan.map((p,i)=>{
     const c=calc(p.id,p.qty,!!p.chain), city=p.sellCity||"Brecilien", sp=sellPrice(p.id,city), rev=c.made*sp*(1-feeRate()), spent=c.cost+c.buyFee+c.station-c.back, pr=rev-spent;
     tCost+=c.cost+c.buyFee-c.back; tStation+=c.station; tRev+=rev; if(!sp||c.missing) ok=false;
-    for(const l of c.lines){ const e=((shop[l.city] ||= {})[l.iid] ||= {need:0,sum:0,p:l.p}); e.need+=l.need; e.sum+=l.sum; }
+    for(const l of c.lines){ const e=((shop[l.city] ||= {})[l.iid] ||= {need:0,sum:0,p:l.p}); e.need+=l.need; e.sum+=l.sum*(1+buyFeeRate()); }
     return `<tr>
       <td><div class="ing">${img(p.id)}<div class="nm">${esc(nm(p.id))} ${badge(p.id)}${p.chain?`<div class="alt">${T("chainShort")}</div>`:""}</div></div></td>
       <td class="n"><input type="number" class="pq" min="1" data-pq="${i}" value="${p.qty}" aria-label="${T("count")}"></td>
@@ -703,7 +703,6 @@ function renderPlan(){
   // Items marked "already have" are not bought, but profit still counts them at market price: you could sell them instead.
   let toBuy=0, haveSum=0;
   for(const c of Object.keys(shop)) for(const [iid,e] of Object.entries(shop[c])){ if(st.have[iid]) haveSum+=e.sum; else toBuy+=e.sum; }
-  toBuy *= 1+buyFeeRate(); // buy orders cost 2.5% on top
   const pr=tRev-tCost-tStation;
   $("#plan").innerHTML = `${items}<div class="plan-sum">
     <div class="cell"><span class="k">${T("toBuy")}</span><span class="v">${fmt(toBuy)}</span>${haveSum?`<small class="alt">${T("haveWorth")} ${fmt(haveSum)}</small>`:""}</div>
