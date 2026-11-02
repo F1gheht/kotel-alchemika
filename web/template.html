@@ -293,7 +293,7 @@ textarea#copyArea{width:100%;height:160px;margin-top:8px;font-family:var(--f-mon
 
 <script>
 const DATA = /*__DATA__*/null;
-const APP_VERSION = "2.7.2";
+const APP_VERSION = "2.8.1";
 const CITIES = ["Brecilien","Bridgewatch","Martlock","Thetford","Fort Sterling","Lymhurst","Caerleon"];
 const FAMILY_ORDER = ["HEAL","ENERGY","REVIVE","STONESKIN","SLOWFIELD","COOLDOWN","CLEANSE","MOB_RESET","CLEANSE2","ACID","BERSERK","LAVA","GATHER","TORNADO","LIFEWARD"];
 const FAM = {
@@ -309,8 +309,8 @@ const RFAM = [
   {key:"STONEBLOCK",raw:"ROCK",city:"Bridgewatch",ru:"Каменные блоки",en:"Stone blocks",rawRu:"камень",rawEn:"stone"}
 ];
 const I18N = {
- ru:{title:"Котёл алхимика",lang:"Язык",server:"Сервер",price:"Цена",avg:"Средняя за 7 дней",now:"Текущая на рынке",auto:"Автообновление",off:"Выключено",m5:"Каждые 5 мин",m10:"Каждые 10 мин",m30:"Каждые 30 мин",refresh:"Обновить цены",
-   tabPotions:"Зелья",tabRefine:"Перекрафт",settings:"Настройки",updDone:"Готово: приложение обновлено до версии ",setLook:"Внешний вид",theme:"Тема",themeSystem:"Как в системе",themeLight:"Светлая",themeDark:"Тёмная",setPrices:"Цены",setApp:"Приложение",updNow:"Обновления",checkNowBtn:"Проверить сейчас",updChecking:"Проверяю…",updLatest:"У тебя последняя версия",updFound:"Есть новая версия ",updErr:"Не получилось проверить: ",setHelp:"Помощь и данные",tourAgain:"Обучение по интерфейсу",resetAll:"Сбросить все данные",resetBtn:"Сбросить…",resetSure:"Удалить планы, ручные цены и настройки?",resetYes:"Да, сбросить",resetNo:"Отмена",setAbout:"О программе",aboutText:"Калькулятор крафта зелий и перекрафта ресурсов Albion Online. Цены — Albion Online Data Project, рецепты и иконки — из игровых файлов. Неофициальный фанатский проект.",checkUpd:"Проверять обновления",updAvail:"Доступна версия ",updYours:"у тебя ",updNotes:"Что нового",updGo:"Обновить",updLater:"Позже",updLoading:"Скачиваю обновление…",updRestart:"Устанавливаю обновление — приложение откроется заново через несколько секунд.",updFail:"Не получилось обновить: ",gCraft:"Крафт",retMode:"Сырьё",retWith:"С возвратом",retPlain:"Без возврата",retWithHint:"купить меньше: вернувшееся идёт в следующие крафты",retPlainHint:"купить на всё количество, возврат останется тебе",backValue:"Вернётся сырья на",backHint:"по рыночной цене, учтено в профите",planQty:"Нужно",toSell:"Продать, шт.",spent:"Сырьё и станок",chainShort:"цепочка от T2",daily:"Бонус дня",dailyNone:"Нет",dailyHintPotion:"если сегодня бонус на зелья",dailyHintRefine:"если сегодня бонус на этот материал",notIsland:"не на острове",gFees:"Налоги и станок",premium:"Премиум",salesTax:"налог с продажи",stationFee:"Станок за 1 крафт",stationHint:"серебро, как в окне крафта; свой остров — 0",stationTotal:"Станок",toBuy:"Докупить на",haveWorth:"уже есть на",afterTax:"после налога",profitHaveNote:"То, что уже есть, считается по рыночной цене: его можно было бы продать.",have:"Есть",clearHave:"Снять все «Есть»",tour:"Обучение",tourNext:"Далее",tourBack:"Назад",tourSkip:"Пропустить",tourDone:"Готово",version:"Версия",
+ ru:{title:"Котёл алхимика",lang:"Язык",server:"Сервер",price:"Цена",avg:"Средняя за 7 дней",now:"Текущие цены рынка",sellMinL:"продажа от",orderMaxL:"ордер до",auto:"Автообновление",off:"Выключено",m5:"Каждые 5 мин",m10:"Каждые 10 мин",m30:"Каждые 30 мин",refresh:"Обновить цены",
+   tabPotions:"Зелья",tabRefine:"Перекрафт",settings:"Настройки",updDone:"Готово: приложение обновлено до версии ",setLook:"Внешний вид",theme:"Тема",themeSystem:"Как в системе",themeLight:"Светлая",themeDark:"Тёмная",setPrices:"Цены",setApp:"Приложение",updNow:"Обновления",checkNowBtn:"Проверить сейчас",updChecking:"Проверяю…",updLatest:"У тебя последняя версия",updFound:"Есть новая версия ",updErr:"Не получилось проверить: ",setHelp:"Помощь и данные",tourAgain:"Обучение по интерфейсу",resetAll:"Сбросить все данные",resetBtn:"Сбросить…",resetSure:"Удалить планы, ручные цены и настройки?",resetYes:"Да, сбросить",resetNo:"Отмена",setAbout:"О программе",aboutText:"Калькулятор крафта зелий и перекрафта ресурсов Albion Online. Цены — Albion Online Data Project, рецепты и иконки — из игровых файлов. Неофициальный фанатский проект.",checkUpd:"Проверять обновления",updAvail:"Доступна версия ",updYours:"у тебя ",updNotes:"Что нового",updGo:"Обновить",updLater:"Позже",updLoading:"Скачиваю обновление…",updRestart:"Устанавливаю обновление — приложение откроется заново через несколько секунд.",updFail:"Не получилось обновить: ",gCraft:"Крафт",retMode:"Сырьё",retWith:"С возвратом",retPlain:"Без возврата",retWithHint:"купить меньше: вернувшееся идёт в следующие крафты",retPlainHint:"купить на всё количество, возврат останется тебе",backValue:"Вернётся сырья на",backHint:"по рыночной цене, учтено в профите",planQty:"Нужно",toSell:"Продать, шт.",spent:"Сырьё и станок",chainShort:"цепочка от T2",daily:"Бонус дня",dailyNone:"Нет",dailyHintPotion:"если сегодня бонус на зелья",dailyHintRefine:"если сегодня бонус на этот материал",notIsland:"не на острове",gFees:"Покупка, продажа и налоги",buyViaL:"Закупка сырья",sellViaL:"Продажа",viaBuyOrder:"Ордером на покупку",viaMarket:"С рынка",viaSellOrder:"Ордером на продажу",viaInstant:"Сразу в ордер",buyOrderHint:"по макс. ордеру на покупку + 2,5% за ордер",buyMarketHint:"сразу по мин. цене продажи, без платы",sellOrderHint:"по мин. цене продажи: налог + 2,5% за ордер",sellInstantHint:"сразу по макс. ордеру на покупку: только налог",buyFeeL:"Плата за ордера на покупку",cmpL:"Закупка: ордером или с рынка",cmpOrder:"ордером",cmpMarket:"с рынка",cmpOrderWins:"ордером дешевле на",cmpMarketWins:"с рынка дешевле на",premium:"Премиум",salesTax:"налог с продажи",stationFee:"Станок за 1 крафт",stationHint:"серебро, как в окне крафта; свой остров — 0",stationTotal:"Станок",toBuy:"Докупить на",haveWorth:"уже есть на",afterTax:"после налога",profitHaveNote:"То, что уже есть, считается по рыночной цене: его можно было бы продать.",have:"Есть",clearHave:"Снять все «Есть»",tour:"Обучение",tourNext:"Далее",tourBack:"Назад",tourSkip:"Пропустить",tourDone:"Готово",version:"Версия",
    plan:"План крафта",clear:"Очистить",shop:"Список закупки",copy:"Копировать",copied:"Скопировано",search:"Найти зелье…",nothing:"Ничего не найдено",
    material:"Материал",tierL:"Тир",enchL:"Зачарование",profileShort:"бонус",
    perCraft:"шт. за крафт",add:"Добавить в план",qtyPotion:"Сколько зелий нужно",qtyRefine:"Сколько произвести",buyWhere:"Где покупать сырьё",cheapestCity:"В самом дешёвом городе",allIn:"Всё в: ",
@@ -327,9 +327,9 @@ const I18N = {
    loading:"Загружаю цены…",loadingClaude:"Загружаю цены через встроенный браузер Claude…",loadFail:"Не удалось загрузить цены: ",loadFail2:". Показаны последние известные цены.",
    onlyApp:"В веб-версии обновление работает только в приложении Claude для компьютера. Здесь показан снимок цен.",notAllowed:"Доступ к браузеру Claude не разрешён для этой страницы. Разреши его в меню прав и попробуй снова.",
    cancelled:"Загрузка цен отменена.",browserFail:"Браузер не открыл сайт с ценами: ",genericFail:"Не удалось загрузить цены. Попробуй ещё раз чуть позже.",badFormat:"Сайт с ценами ответил в неожиданном формате. Показан снимок цен.",
-   note:"Цены: Albion Online Data Project (собираются игроками, могут отставать на часы). Иконки: render.albiononline.com. Рецепты и названия: игровые файлы (ao-bin-dumps). Возврат ресурсов применяется ко всем ингредиентам, кроме редких алхимических (рога, когти, корни и т.п.) — они не возвращаются; количество к покупке рассчитано с запасом: возврат округляется вниз и крафтится заново в несколько заходов. Налог с продажи: 4% с премиумом или 8% без него, плюс 2,5% за выставление ордера. Налог станка — то, что указано за 1 крафт; при цепочке перекрафта он считается только для последнего тира. Фокус указан без учёта специализации: с прокачкой он меньше."},
- en:{title:"Alchemist's Cauldron",lang:"Language",server:"Server",price:"Price",avg:"7-day average",now:"Current market",auto:"Auto-refresh",off:"Off",m5:"Every 5 min",m10:"Every 10 min",m30:"Every 30 min",refresh:"Refresh prices",
-   tabPotions:"Potions",tabRefine:"Refining",settings:"Settings",updDone:"Done: the app is updated to version ",setLook:"Appearance",theme:"Theme",themeSystem:"System",themeLight:"Light",themeDark:"Dark",setPrices:"Prices",setApp:"App",updNow:"Updates",checkNowBtn:"Check now",updChecking:"Checking…",updLatest:"You have the latest version",updFound:"New version available: ",updErr:"Could not check: ",setHelp:"Help and data",tourAgain:"Interface tour",resetAll:"Reset all data",resetBtn:"Reset…",resetSure:"Delete plans, manual prices and settings?",resetYes:"Yes, reset",resetNo:"Cancel",setAbout:"About",aboutText:"Potion crafting and resource refining calculator for Albion Online. Prices from Albion Online Data Project, recipes and icons from the game files. Unofficial fan project.",checkUpd:"Check for updates",updAvail:"Version available: ",updYours:"you have ",updNotes:"What's new",updGo:"Update",updLater:"Later",updLoading:"Downloading the update…",updRestart:"Installing the update — the app will reopen in a few seconds.",updFail:"Could not update: ",gCraft:"Craft",retMode:"Materials",retWith:"With return",retPlain:"No return",retWithHint:"buy less: returns go into the next crafts",retPlainHint:"buy for the full amount, returns stay with you",backValue:"Returned materials",backHint:"at market price, counted in profit",planQty:"Wanted",toSell:"Sell, pcs",spent:"Materials and station",chainShort:"chain from T2",daily:"Daily bonus",dailyNone:"None",dailyHintPotion:"if potions have today's bonus",dailyHintRefine:"if this material has today's bonus",notIsland:"not on an island",gFees:"Taxes and station",premium:"Premium",salesTax:"sales tax",stationFee:"Station fee per craft",stationHint:"silver, as in the craft window; own island — 0",stationTotal:"Station",toBuy:"Still to buy",haveWorth:"already have",afterTax:"after tax",profitHaveNote:"Items you already have count at market price: you could sell them instead.",have:"Have",clearHave:"Clear all “Have”",tour:"Tour",tourNext:"Next",tourBack:"Back",tourSkip:"Skip",tourDone:"Done",version:"Version",
+   note:"Цены: Albion Online Data Project (собираются игроками, могут отставать на часы). Иконки: render.albiononline.com. Рецепты и названия: игровые файлы (ao-bin-dumps). Возврат ресурсов применяется ко всем ингредиентам, кроме редких алхимических (рога, когти, корни и т.п.) — они не возвращаются; количество к покупке рассчитано с запасом: возврат округляется вниз и крафтится заново в несколько заходов. Налог с продажи: 4% с премиумом или 8% без него; выставление ордера на продажу или покупку — ещё 2,5%. Ордер на покупку считается по максимальному ордеру, покупка с рынка — по минимальной цене продажи. Налог станка — то, что указано за 1 крафт; при цепочке перекрафта он считается только для последнего тира. Фокус указан без учёта специализации: с прокачкой он меньше."},
+ en:{title:"Alchemist's Cauldron",lang:"Language",server:"Server",price:"Price",avg:"7-day average",now:"Current market prices",sellMinL:"sell from",orderMaxL:"order up to",auto:"Auto-refresh",off:"Off",m5:"Every 5 min",m10:"Every 10 min",m30:"Every 30 min",refresh:"Refresh prices",
+   tabPotions:"Potions",tabRefine:"Refining",settings:"Settings",updDone:"Done: the app is updated to version ",setLook:"Appearance",theme:"Theme",themeSystem:"System",themeLight:"Light",themeDark:"Dark",setPrices:"Prices",setApp:"App",updNow:"Updates",checkNowBtn:"Check now",updChecking:"Checking…",updLatest:"You have the latest version",updFound:"New version available: ",updErr:"Could not check: ",setHelp:"Help and data",tourAgain:"Interface tour",resetAll:"Reset all data",resetBtn:"Reset…",resetSure:"Delete plans, manual prices and settings?",resetYes:"Yes, reset",resetNo:"Cancel",setAbout:"About",aboutText:"Potion crafting and resource refining calculator for Albion Online. Prices from Albion Online Data Project, recipes and icons from the game files. Unofficial fan project.",checkUpd:"Check for updates",updAvail:"Version available: ",updYours:"you have ",updNotes:"What's new",updGo:"Update",updLater:"Later",updLoading:"Downloading the update…",updRestart:"Installing the update — the app will reopen in a few seconds.",updFail:"Could not update: ",gCraft:"Craft",retMode:"Materials",retWith:"With return",retPlain:"No return",retWithHint:"buy less: returns go into the next crafts",retPlainHint:"buy for the full amount, returns stay with you",backValue:"Returned materials",backHint:"at market price, counted in profit",planQty:"Wanted",toSell:"Sell, pcs",spent:"Materials and station",chainShort:"chain from T2",daily:"Daily bonus",dailyNone:"None",dailyHintPotion:"if potions have today's bonus",dailyHintRefine:"if this material has today's bonus",notIsland:"not on an island",gFees:"Buying, selling and taxes",buyViaL:"Buying materials",sellViaL:"Selling",viaBuyOrder:"Buy order",viaMarket:"From market",viaSellOrder:"Sell order",viaInstant:"Instant sell",buyOrderHint:"at the highest buy order + 2.5% order fee",buyMarketHint:"right away at the lowest sell price, no fee",sellOrderHint:"at the lowest sell price: tax + 2.5% order fee",sellInstantHint:"right away at the highest buy order: tax only",buyFeeL:"Buy order fees",cmpL:"Buying: orders or market",cmpOrder:"orders",cmpMarket:"market",cmpOrderWins:"orders cheaper by",cmpMarketWins:"market cheaper by",premium:"Premium",salesTax:"sales tax",stationFee:"Station fee per craft",stationHint:"silver, as in the craft window; own island — 0",stationTotal:"Station",toBuy:"Still to buy",haveWorth:"already have",afterTax:"after tax",profitHaveNote:"Items you already have count at market price: you could sell them instead.",have:"Have",clearHave:"Clear all “Have”",tour:"Tour",tourNext:"Next",tourBack:"Back",tourSkip:"Skip",tourDone:"Done",version:"Version",
    plan:"Craft plan",clear:"Clear",shop:"Shopping list",copy:"Copy",copied:"Copied",search:"Find a potion…",nothing:"Nothing found",
    material:"Material",tierL:"Tier",enchL:"Enchantment",profileShort:"bonus",
    perCraft:"per craft",add:"Add to plan",qtyPotion:"Potions needed",qtyRefine:"Amount to make",buyWhere:"Where to buy materials",cheapestCity:"Cheapest city",allIn:"All in: ",
@@ -346,10 +346,10 @@ const I18N = {
    loading:"Loading prices…",loadingClaude:"Loading prices through Claude's built-in browser…",loadFail:"Could not load prices: ",loadFail2:". Showing the last known prices.",
    onlyApp:"In the web version, refreshing works only in the Claude desktop app. Showing the price snapshot.",notAllowed:"This page is not allowed to use Claude's browser. Allow it in the permissions menu and try again.",
    cancelled:"Price loading cancelled.",browserFail:"The browser could not open the price site: ",genericFail:"Could not load prices. Try again a bit later.",badFormat:"The price site answered in an unexpected format. Showing the snapshot.",
-   note:"Prices: Albion Online Data Project (crowd-sourced, can lag by hours). Icons: render.albiononline.com. Recipes and names: game files (ao-bin-dumps). Resource return applies to all ingredients except rare alchemy ones (horns, claws, roots and so on), which are never returned; amounts to buy include a margin: returns are rounded down and crafted again over several rounds. Sales tax: 4% with premium or 8% without, plus 2.5% to place a sell order. Station fee is what you enter per craft; in a refining chain it applies to the final tier only. Focus is shown without specialization; leveling lowers it."}
+   note:"Prices: Albion Online Data Project (crowd-sourced, can lag by hours). Icons: render.albiononline.com. Recipes and names: game files (ao-bin-dumps). Resource return applies to all ingredients except rare alchemy ones (horns, claws, roots and so on), which are never returned; amounts to buy include a margin: returns are rounded down and crafted again over several rounds. Sales tax: 4% with premium or 8% without; placing a sell or buy order costs 2.5% more. Buy orders use the highest buy order, buying from the market uses the lowest sell price. Station fee is what you enter per craft; in a refining chain it applies to the final tier only. Focus is shown without specialization; leveling lowers it."}
 };
 
-const DEFAULTS = { lang:"ru", theme:"system", tab:"potion", tourDone:false, checkUpdates:true, premium:true, station:{}, have:{}, server:"europe", priceMode:"avg", auto:10, buyMode:"auto", over:{}, cityPick:{},
+const DEFAULTS = { lang:"ru", theme:"system", tab:"potion", tourDone:false, checkUpdates:true, premium:true, buyVia:"market", sellVia:"order", station:{}, have:{}, server:"europe", priceMode:"avg", auto:10, buyMode:"auto", over:{}, cityPick:{},
   potion:{ sel:"T8_POTION_LAVA", ench:0, qty:120, sellCity:"Brecilien", cityBonus:true, focus:false },
   refine:{ fam:"LEATHER", tier:5, ench:0, qty:500, sellCity:"Martlock", cityBonus:true, focus:false, chain:false },
   plans:{ potion:[{id:"T8_POTION_LAVA",qty:120,sellCity:"Brecilien"},{id:"T5_POTION_MOB_RESET",qty:150,sellCity:"Brecilien"},{id:"T7_POTION_REVIVE",qty:100,sellCity:"Martlock"},{id:"T6_POTION_LAVA",qty:100,sellCity:"Brecilien"},{id:"T5_POTION_CLEANSE2",qty:50,sellCity:"Brecilien"}], refine:[] } };
@@ -367,6 +367,7 @@ function loadState(saved){
   }
   if(!DATA.recipes[st.potion.sel]) st.potion.sel="T8_POTION_LAVA";
   st.station ||= {}; st.have ||= {};
+  if(st.priceMode==="order") st.priceMode="now";
   // older versions kept one shared plan: split it into the potion and refining plans
   if(Array.isArray(saved.plan) && !saved.plans){ st.plans={ potion:saved.plan.filter(p=>isPotion(p.id)), refine:saved.plan.filter(p=>!isPotion(p.id)) }; }
   delete st.plan;
@@ -396,7 +397,13 @@ const rfamOf = id => RFAM.find(f=>new RegExp(`^T\\d_${f.key}(_LEVEL\\d@\\d)?$`).
 const refineId = (fam,t,e) => `T${t}_${fam}${e?`_LEVEL${e}@${e}`:""}`;
 const maxEnch = (fam,t) => (fam==="STONEBLOCK"||t<4) ? 0 : 4;
 
-function cityPrice(id, city){ const e = PRICES[id]?.[city]; if(!e) return 0; return st.priceMode==="now" ? (e.s||e.a||0) : (e.a||e.s||0); }
+// Prices. With the 7-day average both sides use the average. With current prices:
+// buying through a buy order pays the highest buy order (b), buying from the market pays the lowest sell price (s);
+// selling through a sell order gets the lowest sell price (s), selling instantly gets the highest buy order (b).
+function cityPrice(id, city, side="buy"){ const e = PRICES[id]?.[city]; if(!e) return 0;
+  if(st.priceMode!=="now") return e.a||e.s||0;
+  const useOrder = side==="buy" ? st.buyVia==="order" : st.sellVia==="instant";
+  return useOrder ? (e.b||0) : (e.s||0); }
 // Cheapest city with a real market: prefer cities that trade 50+ a day, so one stray order (often in Caerleon) does not win.
 function cheapest(id){
   const pick = minVol => { let b=null; for(const c of CITIES){ const p=cityPrice(id,c), v=PRICES[id]?.[c]?.v; if(p>0 && (minVol===0 || (v!=null && v>=minVol)) && (!b||p<b.p)) b={c,p}; } return b; };
@@ -404,10 +411,14 @@ function cheapest(id){
 }
 function buyCity(id){ return st.cityPick[id] || (st.buyMode!=="auto" ? st.buyMode : (cheapest(id)?.c || "Brecilien")); }
 function unitPrice(id){ return st.over[id]!=null ? st.over[id] : cityPrice(id, buyCity(id)); }
-function sellPrice(id, city){ const k="sell:"+id; return st.over[k]!=null ? st.over[k] : cityPrice(id, city); }
-// Sales tax 4% with premium or 8% without, plus 2.5% to place a sell order.
-const feeRate = () => (st.premium?0.04:0.08) + 0.025;
-const feePct = () => (feeRate()*100).toFixed(1).replace(/\.0$/,"").replace(".", st.lang==="ru"?",":".") + "%";
+function sellPrice(id, city){ const k="sell:"+id; return st.over[k]!=null ? st.over[k] : cityPrice(id, city, "sell"); }
+// Sales tax 4% with premium or 8% without; placing an order (sell or buy) costs 2.5% more.
+const SETUP = 0.025;
+const taxRate = () => (st.premium?0.04:0.08);
+const feeRate = () => taxRate() + (st.sellVia==="instant" ? 0 : SETUP);
+const buyFeeRate = () => st.buyVia==="order" ? SETUP : 0;
+const pctStr = x => (x*100).toFixed(1).replace(/\.0$/,"").replace(".", st.lang==="ru"?",":".") + "%";
+const feePct = () => pctStr(feeRate());
 const cfg = id => isPotion(id) ? st.potion : st.refine;
 // Production bonus: base 18%, crafting bonus city +15%, refining bonus city +40%, focus +59%.
 // Daily bonus adds +10% or +20% production bonus to the categories the game highlights that day.
@@ -460,7 +471,8 @@ function calc(id, qty, chain){
   const merged={}; for(const l of lines){ const m=merged[l.iid]; if(m){ m.need+=l.need; m.gross+=l.gross; m.sum+=l.sum; } else merged[l.iid]={...l}; }
   const out=Object.values(merged), cost=out.reduce((a,l)=>a+l.sum,0);
   const station=(st.station[id]||0)*crafts;
-  return {crafts, made, rounds:pb.rounds, lines:out, madeLines, cost, station, back, perUnit:(cost+station-back)/made, focus, missing:out.some(l=>l.missing)};
+  const buyFee = cost*buyFeeRate();
+  return {crafts, made, rounds:pb.rounds, lines:out, madeLines, cost, buyFee, station, back, perUnit:(cost+buyFee+station-back)/made, focus, missing:out.some(l=>l.missing)};
 }
 const curId = () => st.tab==="potion" ? baseOf(st.potion.sel)+(st.potion.ench?"@"+st.potion.ench:"") : refineId(st.refine.fam, st.refine.tier, Math.min(st.refine.ench, maxEnch(st.refine.fam, st.refine.tier)));
 
@@ -536,9 +548,16 @@ function renderMain(){
   const id=curId(), r=DATA.recipes[id], c0=cfg(id), pot=isPotion(id), chain=!pot&&c0.chain;
   if(!r){ $("#main").innerHTML=`<div class="empty">${T("nothing")}</div>`; return; }
   const c=calc(id, c0.qty, chain);
-  const sp=sellPrice(id, c0.sellCity), revenue=c.made*sp*(1-feeRate()), spent=c.cost+c.station-c.back, profit=revenue-spent, margin=spent?profit/spent*100:0;
+  const sp=sellPrice(id, c0.sellCity), revenue=c.made*sp*(1-feeRate()), spent=c.cost+c.buyFee+c.station-c.back, profit=revenue-spent, margin=spent?profit/spent*100:0;
+  // compare buying through buy orders (+2.5%) with buying straight from the market
+  let cmp=null;
+  if(st.priceMode==="now"){
+    let viaOrder=0, viaMarket=0, ok=true;
+    for(const l of c.lines){ const e=PRICES[l.iid]?.[l.city]||{}; if(st.over[l.iid]!=null||!e.s||!e.b){ ok=false; break; } viaOrder+=l.need*e.b*(1+SETUP); viaMarket+=l.need*e.s; }
+    if(ok) cmp={viaOrder, viaMarket};
+  }
   const vol=PRICES[id]?.[c0.sellCity]?.v;
-  const chips=CITIES.map(cc=>({cc,p:cityPrice(id,cc),v:PRICES[id]?.[cc]?.v})).filter(x=>x.p);
+  const chips=CITIES.map(cc=>({cc,p:cityPrice(id,cc,"sell"),v:PRICES[id]?.[cc]?.v})).filter(x=>x.p);
   const bestP=Math.max(0,...chips.map(x=>x.p)), lowP=Math.min(...chips.map(x=>x.p)); const okProfit = sp && !c.missing;
   const fam = rfamOf(id);
   const bonusLabel = pot ? `${T("cityBonus")} <small>${T("notIsland")}</small>` : `${T("cityBonus")} <small>${fam.city} · ${T("notIsland")}</small>`;
@@ -565,7 +584,9 @@ function renderMain(){
     ${c0.focus?`<div class="cell"><span class="k">${T("focusCost")}</span><span class="v">${fmt(c.focus)}</span></div>`:""}
   </div></div>
   <div class="group"><div class="group-name">${T("gFees")}</div><div class="cells">
-    <label class="cell chk" for="premium"><input type="checkbox" id="premium" ${st.premium?"checked":""}><span>${T("premium")}<small>${T("salesTax")} ${feePct()}</small></span></label>
+    <div class="cell"><span class="k">${T("buyViaL")}</span><div class="seg r"><button data-buyvia="order" aria-pressed="${st.buyVia==="order"}">${T("viaBuyOrder")}</button><button data-buyvia="market" aria-pressed="${st.buyVia!=="order"}">${T("viaMarket")}</button></div><small class="alt">${st.buyVia==="order"?T("buyOrderHint"):T("buyMarketHint")}</small></div>
+    <div class="cell"><span class="k">${T("sellViaL")}</span><div class="seg r"><button data-sellvia="order" aria-pressed="${st.sellVia!=="instant"}">${T("viaSellOrder")}</button><button data-sellvia="instant" aria-pressed="${st.sellVia==="instant"}">${T("viaInstant")}</button></div><small class="alt">${st.sellVia==="instant"?T("sellInstantHint"):T("sellOrderHint")}</small></div>
+    <label class="cell chk" for="premium"><input type="checkbox" id="premium" ${st.premium?"checked":""}><span>${T("premium")}<small>${T("salesTax")} ${pctStr(taxRate())}${st.sellVia==="instant"?"":" + 2,5%"}</small></span></label>
     <label class="cell" for="station"><span class="k">${T("stationFee")}</span><input type="number" id="station" min="0" step="1" value="${st.station[id]||0}"><small class="alt">${T("stationHint")}</small></label>
   </div></div>
   </div>
@@ -584,6 +605,8 @@ function renderMain(){
     <div class="cell"><span class="k">${T("crafts")}</span><span class="v">${fmt(c.crafts)} → ${fmt(c.made)} ${T("pcs")}</span></div>
     <div class="cell"><span class="k">${T("matTotal")}</span><span class="v">${fmt(c.cost)}</span></div>
     <div class="cell"><span class="k">${T("stationTotal")}</span><span class="v">${fmt(c.station)}</span></div>
+    ${c.buyFee?`<div class="cell"><span class="k">${T("buyFeeL")}</span><span class="v">${fmt(c.buyFee)}</span></div>`:""}
+    ${cmp?`<div class="cell ${cmp.viaOrder<cmp.viaMarket?"profit pos":""}"><span class="k">${T("cmpL")}</span><span class="v" style="font-size:15px">${T("cmpOrder")} ${fmt(cmp.viaOrder)}<br>${T("cmpMarket")} ${fmt(cmp.viaMarket)}</span><small class="alt">${cmp.viaOrder<cmp.viaMarket?T("cmpOrderWins")+" "+fmt(cmp.viaMarket-cmp.viaOrder):T("cmpMarketWins")+" "+fmt(cmp.viaOrder-cmp.viaMarket)}</small></div>`:""}
     ${c0.plain?`<div class="cell"><span class="k">${T("backValue")}</span><span class="v">${fmt(c.back)}</span><small class="alt">${T("backHint")}</small></div>`:""}
     <div class="cell"><span class="k">${T("perUnit")}</span><span class="v">${fmt(c.perUnit)}</span></div>
     <div class="cell"><span class="k">${T("revenue")} ${feePct()}</span><span class="v">${sp?fmt(revenue):"—"}</span></div>
@@ -596,7 +619,7 @@ function renderMain(){
     ${Object.keys(st.over).length?`<button class="cell" id="resetOver" style="justify-content:center">${T("resetOver")}</button>`:""}
   </div>
   <div class="subhead">${T("pricesByCity")}</div>
-  <div class="cities" id="cityPrices">${chips.length?chips.map(x=>`<div class="city-cell ${x.p===bestP?"best":""} ${x.p===lowP&&chips.length>1?"low":""}"><span>${x.cc}${x.p===lowP&&chips.length>1?`<br><span class="tag low">${T("cheapTag")}</span>`:""}${x.p===bestP&&chips.length>1?`<br><span class="tag best">${T("dearTag")}</span>`:""}</span><span class="mono">${fmt(x.p)}${x.v!=null?`<br><span class="alt">${fmt(x.v)}${T("perDay")}</span>`:""}</span></div>`).join(""):`<div class="sub">${T("noPrices")}</div>`}</div>`;
+  <div class="cities" id="cityPrices">${chips.length?chips.map(x=>`<div class="city-cell ${x.p===bestP?"best":""} ${x.p===lowP&&chips.length>1?"low":""}"><span>${x.cc}${x.p===lowP&&chips.length>1?`<br><span class="tag low">${T("cheapTag")}</span>`:""}${x.p===bestP&&chips.length>1?`<br><span class="tag best">${T("dearTag")}</span>`:""}</span><span class="mono">${fmt(x.p)}${x.v!=null?`<br><span class="alt">${fmt(x.v)}${T("perDay")}</span>`:""}${(()=>{ const e=PRICES[id]?.[x.cc]||{}; return (e.s||e.b)?`<br><span class="alt">${e.s?T("sellMinL")+" "+fmt(e.s):""}${e.s&&e.b?"<br>":""}${e.b?T("orderMaxL")+" "+fmt(e.b):""}</span>`:""; })()}</span></div>`).join(""):`<div class="sub">${T("noPrices")}</div>`}</div>`;
 }
 $("#main").addEventListener("change", e=>{
   const t=e.target, id=curId(), c0=cfg(id);
@@ -616,6 +639,9 @@ $("#main").addEventListener("change", e=>{
   save(); renderMain(); renderPlan();
 });
 $("#main").addEventListener("click", e=>{
+  const bv=e.target.closest("[data-buyvia]"), sv=e.target.closest("[data-sellvia]");
+  if(bv){ st.buyVia=bv.dataset.buyvia; save(); renderMain(); renderPlan(); return; }
+  if(sv){ st.sellVia=sv.dataset.sellvia; save(); renderMain(); renderPlan(); return; }
   const rb=e.target.closest("[data-ret]");
   if(rb){ cfg(curId()).plain = rb.dataset.ret==="plain"; save(); renderMain(); renderPlan(); return; }
   if(e.target.id==="addPlan"){
@@ -637,8 +663,8 @@ function renderPlan(){
   if(!plan.length){ $("#plan").innerHTML=`<div class="empty">${T("planEmpty")}</div>`; $("#shop").innerHTML=`<div class="empty">${T("shopEmpty")}</div>`; shopText=""; return; }
   let tCost=0, tRev=0, tStation=0, ok=true; const shop={};
   const rows = plan.map((p,i)=>{
-    const c=calc(p.id,p.qty,!!p.chain), city=p.sellCity||"Brecilien", sp=sellPrice(p.id,city), rev=c.made*sp*(1-feeRate()), spent=c.cost+c.station-c.back, pr=rev-spent;
-    tCost+=c.cost-c.back; tStation+=c.station; tRev+=rev; if(!sp||c.missing) ok=false;
+    const c=calc(p.id,p.qty,!!p.chain), city=p.sellCity||"Brecilien", sp=sellPrice(p.id,city), rev=c.made*sp*(1-feeRate()), spent=c.cost+c.buyFee+c.station-c.back, pr=rev-spent;
+    tCost+=c.cost+c.buyFee-c.back; tStation+=c.station; tRev+=rev; if(!sp||c.missing) ok=false;
     for(const l of c.lines){ const e=((shop[l.city] ||= {})[l.iid] ||= {need:0,sum:0,p:l.p}); e.need+=l.need; e.sum+=l.sum; }
     return `<tr>
       <td><div class="ing">${img(p.id)}<div class="nm">${esc(nm(p.id))} ${badge(p.id)}${p.chain?`<div class="alt">${T("chainShort")}</div>`:""}</div></div></td>
@@ -656,6 +682,7 @@ function renderPlan(){
   // Items marked "already have" are not bought, but profit still counts them at market price: you could sell them instead.
   let toBuy=0, haveSum=0;
   for(const c of Object.keys(shop)) for(const [iid,e] of Object.entries(shop[c])){ if(st.have[iid]) haveSum+=e.sum; else toBuy+=e.sum; }
+  toBuy *= 1+buyFeeRate(); // buy orders cost 2.5% on top
   const pr=tRev-tCost-tStation;
   $("#plan").innerHTML = `${items}<div class="plan-sum">
     <div class="cell"><span class="k">${T("toBuy")}</span><span class="v">${fmt(toBuy)}</span>${haveSum?`<small class="alt">${T("haveWorth")} ${fmt(haveSum)}</small>`:""}</div>
@@ -726,7 +753,7 @@ async function fetchViaClaude(){
     const r2=await mcp.callTool("host:claude_browser","get_page_text", m?{tabId:m[1],max_chars:900000}:{max_chars:900000},{cache:false});
     const t2=textOf(r2), a=t2.indexOf("["), b=t2.lastIndexOf("]"); if(a<0||b<a) throw {code:"parse"};
     for(const x of JSON.parse(t2.slice(a,b+1))){
-      const e=(prices[x.item_id] ||= {})[x.city]={s:(x.sell_price_min>0&&x.sell_price_min<5e7)?x.sell_price_min:0};
+      const e=(prices[x.item_id] ||= {})[x.city]={s:(x.sell_price_min>0&&x.sell_price_min<5e7)?x.sell_price_min:0, b:(x.buy_price_max>0&&x.buy_price_max<5e7)?x.buy_price_max:0};
       const old=DATA.prices[x.item_id]?.[x.city]; if(old&&st.server==="europe"){ if(old.v!=null) e.v=old.v; if(old.a) e.a=old.a; }
     }
   }
@@ -761,7 +788,7 @@ const TOUR = [
   {sel:"#shopPanel", tab:"potion", ru:["Список закупки","Всё из плана, разложенное по городам. Переключатель «Есть» — у тебя это уже есть (например, вырастил на острове): строка не попадёт в сумму «Докупить» и в скопированный список."], en:["Shopping list","Everything in the plan, split by city. The “Have” switch means you already own it (say, grown on your island): it leaves the “Still to buy” total and the copied list."]},
   {sel:"#picker", tab:"refine", ru:["Перекрафт","Выбери материал, тир и зачарование. У каждого материала свой профильный город — он указан под названием."], en:["Refining","Choose the material, tier and enchantment. Each material has its own bonus city, shown under its name."]},
   {sel:"#setup", tab:"refine", ru:["Цепочка","«Предыдущий тир делать самому» — посчитать всю цепочку от T2, а не покупать кожу или слитки тиром ниже."], en:["Chain","“Make the previous tier myself” calculates the whole chain from T2 instead of buying the lower-tier refined item."]},
-  {sel:"#topControls", tab:null, ru:["Цены и настройки","Цены берутся с Albion Online Data Project и обновляются сами. Можно считать по средней за 7 дней или по текущей. В «Настройках» — язык, тема, сервер, автообновление и повтор этого обучения."], en:["Prices and settings","Prices come from Albion Online Data Project and refresh on their own. Use the 7-day average or the current price. “Settings” has the language, theme, server, auto-refresh and this tour again."]}
+  {sel:"#topControls", tab:null, ru:["Цены и настройки","Цены берутся с Albion Online Data Project и обновляются сами. Цены — средние за 7 дней или текущие; как покупать сырьё и как продавать, выбирается в блоке «Покупка, продажа и налоги». В «Настройках» — язык, тема, сервер, автообновление и повтор этого обучения."], en:["Prices and settings","Prices come from Albion Online Data Project and refresh on their own. Use 7-day averages or current prices; how you buy and sell is set in “Buying, selling and taxes”. “Settings” has the language, theme, server, auto-refresh and this tour again."]}
 ];
 let tourI=-1, tourTabBefore="potion";
 function tourPlace(){
