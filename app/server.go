@@ -26,7 +26,7 @@ var idsTxt string
 
 const (
 	appName    = "KotelAlchemika"
-	appVersion = "2.9.1"
+	appVersion = "2.9.3"
 	listenAddr = "127.0.0.1:47821"
 )
 
@@ -150,48 +150,72 @@ func fetchCurrentIDs(host string, ids []string) (map[string]map[string]cell, err
 }
 
 func fetchHistory(host string) (map[string]map[string]cell, error) {
-	return fetchHistoryIDs(host, itemIDs(), 7)
+	return fetchHistoryIDs(host, itemIDs(), 7, "1")
 }
 
 // fetchHistoryIDs loads daily sales for the last `days` days: the 7-day average and volume come from
-// the last week, the last sale from the newest day that had any sales.
-func fetchHistoryIDs(host string, ids []string, days int) (map[string]map[string]cell, error) {
+// the last week, the last sale from the newest day that had any sales. Sales of the given qualities are
+// added together (equipment sells in several qualities; most trading is in normal, good and outstanding).
+func fetchHistoryIDs(host string, ids []string, days int, qualities string) (map[string]map[string]cell, error) {
 	date := time.Now().AddDate(0, 0, -days).Format("2006-01-02")
 	week := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
-	out := map[string]map[string]cell{}
+	type agg struct{ cnt, sum float64 }
+	byDay := map[string]map[string]map[string]*agg{} // item -> city -> day
 	for i, part := range chunks(ids, 30) {
 		if i > 0 {
 			time.Sleep(350 * time.Millisecond) // stay well under the site's request limit
 		}
 		var rows []histRow
-		u := fmt.Sprintf("%s/api/v2/stats/history/%s.json?locations=%s&qualities=1&time-scale=24&date=%s", host, strings.Join(part, ","), locs(), date)
+		u := fmt.Sprintf("%s/api/v2/stats/history/%s.json?locations=%s&qualities=%s&time-scale=24&date=%s", host, strings.Join(part, ","), locs(), qualities, date)
 		if err := getJSON(u, &rows); err != nil {
 			return nil, err
 		}
 		for _, h := range rows {
-			cnt, sum := 0, 0.0
-			last, lastP := "", 0.0
+			if byDay[h.ItemID] == nil {
+				byDay[h.ItemID] = map[string]map[string]*agg{}
+			}
+			if byDay[h.ItemID][h.Location] == nil {
+				byDay[h.ItemID][h.Location] = map[string]*agg{}
+			}
+			days := byDay[h.ItemID][h.Location]
 			for _, p := range h.Data {
-				if p.ItemCount > 0 && p.AvgPrice > 0 && p.Timestamp >= last {
-					last, lastP = p.Timestamp, p.AvgPrice
-				}
-				if p.Timestamp != "" && p.Timestamp < week {
+				if p.ItemCount <= 0 || p.AvgPrice <= 0 {
 					continue
 				}
-				cnt += p.ItemCount
-				sum += float64(p.ItemCount) * p.AvgPrice
+				d := days[p.Timestamp]
+				if d == nil {
+					d = &agg{}
+					days[p.Timestamp] = d
+				}
+				d.cnt += float64(p.ItemCount)
+				d.sum += float64(p.ItemCount) * p.AvgPrice
 			}
-			if out[h.ItemID] == nil {
-				out[h.ItemID] = map[string]cell{}
+		}
+	}
+	out := map[string]map[string]cell{}
+	for id, cs := range byDay {
+		out[id] = map[string]cell{}
+		for city, ds := range cs {
+			var cnt, sum float64
+			last := ""
+			for day, d := range ds {
+				if day > last {
+					last = day
+				}
+				if day != "" && day < week {
+					continue
+				}
+				cnt += d.cnt
+				sum += d.sum
 			}
-			c := cell{V: cnt / 7}
-			if lastP > 0 {
-				c.L, c.LT = int(lastP+0.5), last
+			c := cell{V: int(cnt/7 + 0.5)}
+			if l := ds[last]; l != nil && l.cnt > 0 {
+				c.L, c.LT = int(l.sum/l.cnt+0.5), last
 			}
 			if cnt > 0 {
-				c.A = int(sum/float64(cnt) + 0.5)
+				c.A = int(sum/cnt + 0.5)
 			}
-			out[h.ItemID][h.Location] = c
+			out[id][city] = c
 		}
 	}
 	return out, nil
@@ -285,7 +309,7 @@ func loadExtra(server string, ids []string) (map[string]map[string]cell, error) 
 	}
 	mu.Unlock()
 	if len(stale) > 0 {
-		if h, herr := fetchHistoryIDs(host, stale, 30); herr == nil {
+		if h, herr := fetchHistoryIDs(host, stale, 30, "1,2,3"); herr == nil {
 			mu.Lock()
 			for _, id := range stale {
 				hc[id] = extraHist{at: time.Now(), data: h[id]}

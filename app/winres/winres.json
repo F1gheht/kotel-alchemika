@@ -3,7 +3,7 @@
   "RT_MANIFEST": {
     "#1": {
       "0409": {
-        "identity": { "name": "KotelAlchemika", "version": "2.9.1.0" },
+        "identity": { "name": "KotelAlchemika", "version": "2.9.3.0" },
         "description": "Kotel Alchemika - Albion Online crafting calculator",
         "minimum-os": "win7",
         "execution-level": "as invoker",
@@ -15,16 +15,16 @@
   "RT_VERSION": {
     "#1": {
       "0000": {
-        "fixed": { "file_version": "2.9.1.0", "product_version": "2.9.1.0" },
+        "fixed": { "file_version": "2.9.3.0", "product_version": "2.9.3.0" },
         "info": {
           "0409": {
             "CompanyName": "Kotel Alchemika",
             "FileDescription": "Котёл алхимика — калькулятор крафта Albion Online",
-            "FileVersion": "2.9.1",
+            "FileVersion": "2.9.3",
             "InternalName": "KotelAlchemika",
             "OriginalFilename": "KotelAlchemika.exe",
             "ProductName": "Котёл алхимика",
-            "ProductVersion": "2.9.1"
+            "ProductVersion": "2.9.3"
           }
         }
       }
