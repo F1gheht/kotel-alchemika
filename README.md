@@ -1,8 +1,8 @@
 # Котёл алхимика · Alchemist's Cauldron
 
-Калькулятор крафта зелий и перекрафта ресурсов для **Albion Online**: рецепты, иконки, живые цены по городам, расчёт профита и список закупки.
+Калькулятор крафта зелий, перекрафта ресурсов и крафта предметов (оружие, броня, левая рука, сумки, плащи, инструменты) для **Albion Online**: рецепты, иконки, живые цены по городам, расчёт профита и список закупки.
 
-*Crafting and refining calculator for Albion Online: recipes, icons, live market prices by city, profit and a shopping list. English UI included.*
+*Calculator for potion crafting, resource refining and item crafting (weapons, armor, off-hands, bags, capes, tools) in Albion Online: recipes, icons, live market prices by city, profit and a shopping list. English UI included.*
 
 ## Скачать
 

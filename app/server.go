@@ -26,7 +26,7 @@ var idsTxt string
 
 const (
 	appName    = "KotelAlchemika"
-	appVersion = "2.8.23"
+	appVersion = "2.9.0"
 	listenAddr = "127.0.0.1:47821"
 )
 
@@ -118,8 +118,12 @@ func chunks(all []string, n int) [][]string {
 }
 
 func fetchCurrent(host string) (map[string]map[string]cell, error) {
+	return fetchCurrentIDs(host, itemIDs())
+}
+
+func fetchCurrentIDs(host string, ids []string) (map[string]map[string]cell, error) {
 	out := map[string]map[string]cell{}
-	for _, part := range chunks(itemIDs(), 100) {
+	for _, part := range chunks(ids, 100) {
 		var rows []priceRow
 		u := fmt.Sprintf("%s/api/v2/stats/prices/%s.json?locations=%s&qualities=1", host, strings.Join(part, ","), locs())
 		if err := getJSON(u, &rows); err != nil {
@@ -143,9 +147,13 @@ func fetchCurrent(host string) (map[string]map[string]cell, error) {
 }
 
 func fetchHistory(host string) (map[string]map[string]cell, error) {
+	return fetchHistoryIDs(host, itemIDs())
+}
+
+func fetchHistoryIDs(host string, ids []string) (map[string]map[string]cell, error) {
 	date := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
 	out := map[string]map[string]cell{}
-	for i, part := range chunks(itemIDs(), 30) {
+	for i, part := range chunks(ids, 30) {
 		if i > 0 {
 			time.Sleep(350 * time.Millisecond) // stay well under the site's request limit
 		}
@@ -224,7 +232,65 @@ func loadPrices(server string) (*priceResult, error) {
 	return r, nil
 }
 
-var iconID = regexp.MustCompile(`^T\d_[A-Z0-9_]+(@\d)?$`)
+var iconID = regexp.MustCompile(`^[A-Z0-9_]{3,80}(@\d)?$`)
+
+// Equipment prices are loaded on demand for the item the page shows: current prices every time,
+// 7-day history at most once an hour per item.
+type extraHist struct {
+	at   time.Time
+	data map[string]cell
+}
+
+var extraHistCache = map[string]map[string]extraHist{} // server -> item -> history
+
+func loadExtra(server string, ids []string) (map[string]map[string]cell, error) {
+	host, ok := priceHosts[server]
+	if testHost != "" {
+		host, ok = testHost, true
+	}
+	if !ok {
+		return nil, errors.New("неизвестный сервер")
+	}
+	cur, err := fetchCurrentIDs(host, ids)
+	if err != nil {
+		return nil, err
+	}
+	mu.Lock()
+	hc := extraHistCache[server]
+	if hc == nil {
+		hc = map[string]extraHist{}
+		extraHistCache[server] = hc
+	}
+	var stale []string
+	for _, id := range ids {
+		if h, ok := hc[id]; !ok || time.Since(h.at) > time.Hour {
+			stale = append(stale, id)
+		}
+	}
+	mu.Unlock()
+	if len(stale) > 0 {
+		if h, herr := fetchHistoryIDs(host, stale); herr == nil {
+			mu.Lock()
+			for _, id := range stale {
+				hc[id] = extraHist{at: time.Now(), data: h[id]}
+			}
+			mu.Unlock()
+		}
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	for _, id := range ids {
+		for city, h := range hc[id].data {
+			if cur[id] == nil {
+				cur[id] = map[string]cell{}
+			}
+			c := cur[id][city]
+			c.A, c.V = h.A, h.V
+			cur[id][city] = c
+		}
+	}
+	return cur, nil
+}
 
 // serveIcon returns an item icon from the local cache, downloading it from the official render service once.
 func serveIcon(w http.ResponseWriter, r *http.Request) {
@@ -324,6 +390,27 @@ func newMux(onFocus, onQuit func()) *http.ServeMux {
 	})
 	registerUpdateRoutes(mux, onQuit)
 	mux.HandleFunc("/api/icon/", serveIcon)
+	mux.HandleFunc("/api/prices/extra", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		var ids []string
+		for _, id := range strings.Split(r.URL.Query().Get("ids"), ",") {
+			if iconID.MatchString(id) {
+				ids = append(ids, id)
+			}
+		}
+		if len(ids) == 0 || len(ids) > 120 {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(map[string]string{"error": "нужно от 1 до 120 предметов"})
+			return
+		}
+		res, err := loadExtra(r.URL.Query().Get("server"), ids)
+		if err != nil {
+			w.WriteHeader(502)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]any{"prices": res})
+	})
 	mux.HandleFunc("/api/prices", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		res, err := loadPrices(r.URL.Query().Get("server"))
