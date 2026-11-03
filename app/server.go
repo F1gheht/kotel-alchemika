@@ -26,7 +26,7 @@ var idsTxt string
 
 const (
 	appName    = "KotelAlchemika"
-	appVersion = "2.9.0"
+	appVersion = "2.9.1"
 	listenAddr = "127.0.0.1:47821"
 )
 
@@ -39,10 +39,12 @@ var priceHosts = map[string]string{
 }
 
 type cell struct {
-	S int `json:"s,omitempty"` // lowest sell order now
-	B int `json:"b,omitempty"` // highest buy order now
-	A int `json:"a,omitempty"` // 7-day average deal price
-	V int `json:"v,omitempty"` // average amount sold per day
+	S  int    `json:"s,omitempty"`  // lowest sell order now
+	B  int    `json:"b,omitempty"`  // highest buy order now
+	A  int    `json:"a,omitempty"`  // 7-day average deal price
+	V  int    `json:"v,omitempty"`  // average amount sold per day
+	L  int    `json:"l,omitempty"`  // price of the last recorded sale (daily average of the last day with sales)
+	LT string `json:"lt,omitempty"` // day of that sale
 }
 
 type priceRow struct {
@@ -58,6 +60,7 @@ type histRow struct {
 	Data     []struct {
 		ItemCount int     `json:"item_count"`
 		AvgPrice  float64 `json:"avg_price"`
+		Timestamp string  `json:"timestamp"`
 	} `json:"data"`
 }
 
@@ -147,11 +150,14 @@ func fetchCurrentIDs(host string, ids []string) (map[string]map[string]cell, err
 }
 
 func fetchHistory(host string) (map[string]map[string]cell, error) {
-	return fetchHistoryIDs(host, itemIDs())
+	return fetchHistoryIDs(host, itemIDs(), 7)
 }
 
-func fetchHistoryIDs(host string, ids []string) (map[string]map[string]cell, error) {
-	date := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+// fetchHistoryIDs loads daily sales for the last `days` days: the 7-day average and volume come from
+// the last week, the last sale from the newest day that had any sales.
+func fetchHistoryIDs(host string, ids []string, days int) (map[string]map[string]cell, error) {
+	date := time.Now().AddDate(0, 0, -days).Format("2006-01-02")
+	week := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
 	out := map[string]map[string]cell{}
 	for i, part := range chunks(ids, 30) {
 		if i > 0 {
@@ -164,7 +170,14 @@ func fetchHistoryIDs(host string, ids []string) (map[string]map[string]cell, err
 		}
 		for _, h := range rows {
 			cnt, sum := 0, 0.0
+			last, lastP := "", 0.0
 			for _, p := range h.Data {
+				if p.ItemCount > 0 && p.AvgPrice > 0 && p.Timestamp >= last {
+					last, lastP = p.Timestamp, p.AvgPrice
+				}
+				if p.Timestamp != "" && p.Timestamp < week {
+					continue
+				}
 				cnt += p.ItemCount
 				sum += float64(p.ItemCount) * p.AvgPrice
 			}
@@ -172,6 +185,9 @@ func fetchHistoryIDs(host string, ids []string) (map[string]map[string]cell, err
 				out[h.ItemID] = map[string]cell{}
 			}
 			c := cell{V: cnt / 7}
+			if lastP > 0 {
+				c.L, c.LT = int(lastP+0.5), last
+			}
 			if cnt > 0 {
 				c.A = int(sum/float64(cnt) + 0.5)
 			}
@@ -220,7 +236,7 @@ func loadPrices(server string) (*priceResult, error) {
 					cur[id] = map[string]cell{}
 				}
 				c := cur[id][city]
-				c.A, c.V = hc.A, hc.V
+				c.A, c.V, c.L, c.LT = hc.A, hc.V, hc.L, hc.LT
 				cur[id][city] = c
 			}
 		}
@@ -269,7 +285,7 @@ func loadExtra(server string, ids []string) (map[string]map[string]cell, error) 
 	}
 	mu.Unlock()
 	if len(stale) > 0 {
-		if h, herr := fetchHistoryIDs(host, stale); herr == nil {
+		if h, herr := fetchHistoryIDs(host, stale, 30); herr == nil {
 			mu.Lock()
 			for _, id := range stale {
 				hc[id] = extraHist{at: time.Now(), data: h[id]}
@@ -285,7 +301,7 @@ func loadExtra(server string, ids []string) (map[string]map[string]cell, error) 
 				cur[id] = map[string]cell{}
 			}
 			c := cur[id][city]
-			c.A, c.V = h.A, h.V
+			c.A, c.V, c.L, c.LT = h.A, h.V, h.L, h.LT
 			cur[id][city] = c
 		}
 	}
